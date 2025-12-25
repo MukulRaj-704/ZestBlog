@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}
+{{ profile_user.username }}'s Profile
+{% endblock %}
+
+{% block content %}
+{% if user == profile_user %}
+  <a href="{% url 'edit_profile' %}">Edit Profile</a>
+  <a href="{% url 'password_change' %}">Change Password</a>
+{% endif %}
+
+<h2>{{ profile_user.username }}</h2>
+<p>Email: {{ profile_user.email }}</p>
+<p>Total Blogs: {{ total_blogs }}</p>
+
+
+<hr>
+
+<h3>Blogs by {{ profile_user.username }}</h3>
+
+{% for blog in blogs %}
+  <h4>
+    <a href="{% url 'blog_detail' blog.slug %}">
+      {{ blog.title }}
+    </a>
+  </h4>
+  <p>{{ blog.created_at }}</p>
+{% empty %}
+  <p>No blogs yet.</p>
+{% endfor %}
+
+<hr>
+
+{% if is_paginated %}
+  <div>
+    {% if page_obj.has_previous %}
+      <a href="?page={{ page_obj.previous_page_number }}">Previous</a>
+    {% endif %}
+
+    <span>
+      Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+    </span>
+
+    {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}">Next</a>
+    {% endif %}
+  </div>
+{% endif %}
+
+{% endblock %}

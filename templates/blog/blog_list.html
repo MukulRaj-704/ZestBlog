@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<form method="get">
+  <input
+    type="text"
+    name="q"
+    placeholder="Search blogs..."
+    value="{{ request.GET.q }}"
+  >
+  <button type="submit">Search</button>
+</form>
+
+<hr>
+
+<h2>All Blogs</h2>
+
+{% if user.is_authenticated %}
+  <a href="{% url 'blog_create' %}">Create Blog</a>
+{% endif %}
+
+<hr>
+
+{% for blog in blogs %}
+  <h3>
+    <a href="{% url 'blog_detail' blog.slug %}">{{ blog.title }}</a>
+  </h3>
+  <p>by {{ blog.author }} | {{ blog.created_at }}</p>
+{% empty %}
+  <p>No blogs yet.</p>
+{% endfor %}
+{% if is_paginated %}
+  <div>
+    {% if page_obj.has_previous %}
+      <a href="?q={{ request.GET.q }}&page={{ page_obj.previous_page_number }}">Previous</a>
+    {% endif %}
+
+    <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+
+    {% if page_obj.has_next %}
+      <a href="?q={{ request.GET.q }}&page={{ page_obj.next_page_number }}">Next</a>
+    {% endif %}
+  </div>
+{% endif %}
+
+{% endblock %}
