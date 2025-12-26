@@ -10,13 +10,26 @@
 
     {% load static %}
 
-    <!-- Optional basic styling -->
+    <!-- ✅ ADD TAILWIND (VERY IMPORTANT) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Optional basic styling (can stay) -->
+     <style>
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+</style>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-        }
+       
         nav {
             background: #222;
             padding: 12px 20px;
@@ -37,57 +50,102 @@
         .container {
             padding: 20px;
         }
-        hr {
-            margin: 20px 0;
-        }
-        .messages {
-            margin-bottom: 15px;
-        }
-        .messages p {
-            padding: 10px;
-            background: #e7f3ff;
-            border-left: 4px solid #2196F3;
-        }
     </style>
 
     {% block extra_head %}{% endblock %}
 </head>
-<body>
+<body class="min-h-screen flex flex-col text-slate-100
+bg-gradient-to-br
+from-slate-800
+via-blue-800
+to-slate-800">
 
 <!-- 🔹 NAVBAR -->
-<nav>
-    <a href="{% url 'blog_list' %}">Home</a>
+<nav class="bg-neutral-900 border-b border-neutral-800">
+  <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
 
-    {% if user.is_authenticated %}
-        <span>Hello, {{ user.username }}</span>
-        <a href="{% url 'blog_create' %}">Create Blog</a>
-        <a href="{% url 'logout' %}">Logout</a>
-        <a href="{% url 'user_profile' user.username %}">My Profile</a>
-    {% else %}
-        <a href="{% url 'login' %}">Login</a>
-        <a href="{% url 'register' %}">Register</a>
-        
-    {% endif %}
+    <!-- LEFT: LOGO / BRAND -->
+    <div class="flex items-center gap-6">
+      
+      <a
+        href="{% url 'blog_list' %}"
+        class="text-2xl text-gray-300 hover:text-white transition no-underlin hover:no-underline">
+        Home
+      </a>
 
+      {% if user.is_authenticated %}
+        <a
+          href="{% url 'blog_create' %}"
+          class="text-2xl text-gray-300 hover:text-white transition no-underline hover:no-underline">
+          Create Blog
+        </a>
+      {% endif %}
+    </div>
+
+    <!-- RIGHT: AUTH ACTIONS -->
+    <div class="flex items-center gap-4 text-sm">
+
+      {% if user.is_authenticated %}
+        <!-- USER CHIP -->
+        <div class="flex items-center gap-2 bg-neutral-800 px-3 py-1.5 rounded-full">
+          <div class="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold text-xs">
+            {{ user.username|slice:":1"|upper }}
+          </div>
+          <span class="text-gray-200">
+            {{ user.username }}
+          </span>
+        </div>
+
+        <a
+          href="{% url 'user_profile' user.username %}"
+          class="text-gray-300 hover:text-white transition no-underline hover:no-underline">
+          Profile
+        </a>
+
+        <a
+          href="{% url 'logout' %}"
+          class="px-4 py-1.5 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 transition no-underline hover:no-underline">
+          Logout
+        </a>
+
+      {% else %}
+        <a
+          href="{% url 'login' %}"
+          class="text-gray-300 hover:text-white transition">
+          Login
+        </a>
+
+        <a
+          href="{% url 'register' %}"
+          class="px-4 py-1.5 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition">
+          Register
+        </a>
+      {% endif %}
+
+    </div>
+  </div>
 </nav>
 
 <!-- 🔹 PAGE CONTENT -->
-<div class="container">
-
-    <!-- Django Messages (optional but professional) -->
+<main class="w-full flex-grow">
     {% if messages %}
-        <div class="messages">
+        <div class="max-w-7xl mx-auto mt-4">
             {% for message in messages %}
-                <p>{{ message }}</p>
+                <p class="mb-2 rounded bg-blue-100 p-3 text-blue-800">
+                    {{ message }}
+                </p>
             {% endfor %}
         </div>
     {% endif %}
 
-    {% block content %}
-    <!-- Child templates will render here -->
-    {% endblock %}
-
-</div>
+    {% block content %}{% endblock %}
+</main>
+<!-- 🔻 GLOBAL FOOTER STRIP -->
+<footer class="bg-neutral-900 border-t border-neutral-800">
+  <div class="max-w-7xl mx-auto px-6 py-4 text-center text-sm text-gray-400">
+    © {% now "Y" %} ZestBlog · Built with Django · College Project
+  </div>
+</footer>
 
 </body>
 </html>

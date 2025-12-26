@@ -1,6 +1,126 @@
-<h2>Register</h2>
-<form method="post">
-  {% csrf_token %}
-  {{ form.as_p }}
-  <button type="submit">Sign Up</button>
-</form>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Register</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- 🔥 FORCE INPUT VISIBILITY (LOCAL FIX) -->
+  <style>
+    input, textarea, select {
+      width: 100% !important;
+      padding: 0.75rem 1rem !important;
+      border-radius: 0.5rem !important;
+      background-color: #eff6ff !important; /* blue-50 */
+      color: #111827 !important;            /* text-gray-900 */
+      border: 1px solid #bfdbfe !important; /* blue-200 */
+    }
+
+    input:focus, textarea:focus, select:focus {
+      outline: none !important;
+      border-color: #6366f1 !important;
+      box-shadow: 0 0 0 2px rgba(99,102,241,.35) !important;
+    }
+
+    input::placeholder {
+      color: #6b7280 !important;
+    }
+  </style>
+</head>
+
+<body class="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+
+  <div class="w-full max-w-md bg-white rounded-xl shadow-lg border border-gray-200">
+
+    <!-- Header -->
+    <div class="py-4 border-b text-center font-semibold text-lg">
+      Register
+    </div>
+
+    <!-- Body -->
+    <div class="px-8 py-8">
+
+      <!-- Icon -->
+      <div class="flex justify-center mb-4">
+        <div class="w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center">
+          <!-- User SVG -->
+          <svg xmlns="http://www.w3.org/2000/svg"
+               viewBox="0 0 24 24"
+               fill="none"
+               stroke="currentColor"
+               stroke-width="2"
+               stroke-linecap="round"
+               stroke-linejoin="round"
+               class="w-8 h-8 text-indigo-600">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Title -->
+      <h2 class="text-center text-xl font-bold mb-1">
+        Create Account
+      </h2>
+      <p class="text-center text-sm text-gray-500 mb-6">
+        Sign up to continue
+      </p>
+
+      <!-- Form -->
+      <form method="post" class="space-y-5">
+        {% csrf_token %}
+
+        {% for field in form %}
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              {{ field.label }}
+            </label>
+
+            {{ field }}
+
+            {% for error in field.errors %}
+              <p class="text-xs text-red-600 mt-1">{{ error }}</p>
+            {% endfor %}
+          </div>
+        {% endfor %}
+
+        <!-- Submit Button -->
+        <button
+          type="submit"
+          class="w-full flex items-center justify-center gap-2
+                 bg-indigo-600 hover:bg-indigo-700
+                 text-white font-semibold py-3 rounded-lg
+                 shadow transition"
+        >
+          Register
+          <!-- Arrow SVG -->
+          <svg xmlns="http://www.w3.org/2000/svg"
+               viewBox="0 0 24 24"
+               fill="none"
+               stroke="currentColor"
+               stroke-width="2"
+               stroke-linecap="round"
+               stroke-linejoin="round"
+               class="w-4 h-4">
+            <path d="M5 12h14"/>
+            <path d="M13 5l7 7-7 7"/>
+          </svg>
+        </button>
+      </form>
+
+      <!-- Footer -->
+      <p class="text-center text-sm text-gray-500 mt-6">
+        Already have an account?
+        <a href="{% url 'login' %}" class="text-indigo-600 font-semibold hover:underline">
+          Login
+        </a>
+      </p>
+
+    </div>
+  </div>
+
+</body>
+</html>

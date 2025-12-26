@@ -1,10 +1,76 @@
-{% extends 'base.html' %}
-{% block content %}
-<h2>Blog Form</h2>
+{% extends "base.html" %}
+{% block title %}Create Blog{% endblock %}
 
-<form method="post" enctype="multipart/form-data">
-  {% csrf_token %}
-  {{ form.as_p }}
-  <button type="submit">Save</button>
-</form>
+{% block content %}
+
+<div class="max-w-3xl mx-auto px-6 py-12">
+
+  <!-- Card -->
+  <div class="bg-slate-50 rounded-2xl shadow-2xl p-8">
+
+    <!-- Heading -->
+    <h2 class="text-2xl font-bold text-slate-900 mb-6 text-center">
+      ✍ Create a New Blog
+    </h2>
+
+    <!-- Form -->
+    <form method="post" enctype="multipart/form-data" class="space-y-6">
+      {% csrf_token %}
+
+      <!-- Title -->
+      <div>
+        <label class="block text-lg font-bold text-slate-900 mb-1">
+          Title
+        </label>
+        {{ form.title }}
+      </div>
+
+      <!-- Slug -->
+      <div>
+        <label class="block text-lg font-bold text-slate-900 mb-1">
+          Slug
+        </label>
+        {{ form.slug }}
+      </div>
+
+      <!-- Cover Image -->
+      <div>
+        <label class="block text-lg font-bold text-slate-900 mb-2">
+          Cover Image
+        </label>
+        {{ form.cover_image }}
+      </div>
+
+      <!-- Content -->
+      <div>
+        <label class="block text-lg font-bold text-slate-900 mb-5">
+          Content
+        </label>
+        {{ form.content }}
+      </div>
+
+      <!-- Publish -->
+      <div class="flex items-center gap-2">
+        {{ form.is_published }}
+        <label class="text-sm text-slate-900">
+          Publish this blog
+        </label>
+      </div>
+
+      <!-- Submit -->
+      <div class="flex justify-center pt-4">
+        <button
+          type="submit"
+          class="px-8 py-3 rounded-xl
+                 bg-blue-600 text-white font-semibold
+                 hover:bg-blue-700 transition shadow-lg">
+          Save Blog
+        </button>
+      </div>
+
+    </form>
+
+  </div>
+</div>
+
 {% endblock %}

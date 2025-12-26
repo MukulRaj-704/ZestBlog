@@ -5,47 +5,109 @@
 {% endblock %}
 
 {% block content %}
-{% if user == profile_user %}
-  <a href="{% url 'edit_profile' %}">Edit Profile</a>
-  <a href="{% url 'password_change' %}">Change Password</a>
-{% endif %}
 
-<h2>{{ profile_user.username }}</h2>
-<p>Email: {{ profile_user.email }}</p>
-<p>Total Blogs: {{ total_blogs }}</p>
+<div class="max-w-4xl mx-auto px-4 py-8">
 
+  <!-- Profile Card -->
+  <div class="bg-white dark:bg-[#1a1a2e] rounded-xl shadow-lg border border-gray-200 dark:border-gray-800 overflow-hidden">
 
-<hr>
+    <!-- Header -->
+    <div class="p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b dark:border-gray-700">
 
-<h3>Blogs by {{ profile_user.username }}</h3>
+      <div class="flex items-center gap-4">
+        <!-- Avatar -->
+        <div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary text-2xl font-bold">
+          {{ profile_user.username|first|upper }}
+        </div>
 
-{% for blog in blogs %}
-  <h4>
-    <a href="{% url 'blog_detail' blog.slug %}">
-      {{ blog.title }}
-    </a>
-  </h4>
-  <p>{{ blog.created_at }}</p>
-{% empty %}
-  <p>No blogs yet.</p>
-{% endfor %}
+        <div>
+          <h2 class="text-xl font-bold text-gray-900 dark:text-white">
+            {{ profile_user.username }}
+          </h2>
+          <p class="text-sm text-gray-500 dark:text-gray-400">
+            {{ profile_user.email }}
+          </p>
+        </div>
+      </div>
 
-<hr>
+      {% if user == profile_user %}
+      <div class="flex gap-2">
+        <a href="{% url 'edit_profile' %}"
+           class="px-4 py-2 rounded-lg bg-primary text-white text-sm font-semibold hover:bg-blue-700 transition">
+          Edit Profile
+        </a>
+        <a href="{% url 'password_change' %}"
+           class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 text-sm font-semibold hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+          Change Password
+        </a>
+      </div>
+      {% endif %}
+    </div>
 
-{% if is_paginated %}
-  <div>
+    <!-- Stats -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 p-6 text-center">
+      <div class="rounded-lg bg-gray-50 dark:bg-gray-800 p-4">
+        <p class="text-sm text-gray-500">Total Blogs</p>
+        <p class="text-2xl font-bold text-gray-900 dark:text-white">
+          {{ total_blogs }}
+        </p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Blogs Section -->
+  <div class="mt-10">
+    <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">
+      Blogs by {{ profile_user.username }}
+    </h3>
+
+    <div class="space-y-4">
+      {% for blog in blogs %}
+        <div class="p-5 bg-white dark:bg-[#1a1a2e] rounded-xl shadow border border-gray-200 dark:border-gray-800">
+          <a href="{% url 'blog_detail' blog.slug %}"
+             class="text-lg font-semibold text-primary hover:underline">
+            {{ blog.title }}
+          </a>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            Published on {{ blog.created_at|date:"M d, Y" }}
+          </p>
+        </div>
+      {% empty %}
+        <p class="text-gray-500 dark:text-gray-400">
+          No blogs yet.
+        </p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  {% if is_paginated %}
+  <div class="flex items-center justify-between mt-8">
     {% if page_obj.has_previous %}
-      <a href="?page={{ page_obj.previous_page_number }}">Previous</a>
+      <a href="?page={{ page_obj.previous_page_number }}"
+         class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 text-sm hover:bg-gray-100 dark:hover:bg-gray-800">
+        ← Previous
+      </a>
+    {% else %}
+      <span></span>
     {% endif %}
 
-    <span>
+    <span class="text-sm text-gray-500">
       Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
     </span>
 
     {% if page_obj.has_next %}
-      <a href="?page={{ page_obj.next_page_number }}">Next</a>
+      <a href="?page={{ page_obj.next_page_number }}"
+         class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 text-sm hover:bg-gray-100 dark:hover:bg-gray-800">
+        Next →
+      </a>
+    {% else %}
+      <span></span>
     {% endif %}
   </div>
-{% endif %}
+  {% endif %}
+
+</div>
 
 {% endblock %}

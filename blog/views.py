@@ -6,7 +6,7 @@ from django.db.models import Q
 from django.shortcuts import redirect
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404
-from .forms import CommentForm
+from .forms import CommentForm, BlogForm
 
 
 class BlogListView(ListView):
@@ -59,7 +59,7 @@ class BlogDetailView(DetailView):
 
 class BlogCreateView(LoginRequiredMixin, CreateView):
     model = Blog
-    fields = ['title', 'slug', 'content', 'cover_image', 'is_published']
+    form_class = BlogForm
     template_name = 'blog/blog_form.html'
     success_url = reverse_lazy('blog_list')
 
@@ -67,15 +67,15 @@ class BlogCreateView(LoginRequiredMixin, CreateView):
         form.instance.author = self.request.user
         return super().form_valid(form)
 
-
 class BlogUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Blog
-    fields = ['title', 'slug', 'content', 'cover_image', 'is_published']
+    form_class = BlogForm
     template_name = 'blog/blog_form.html'
-
+    success_url = reverse_lazy('blog_list')  # ✅ ADD THIS
     def test_func(self):
         blog = self.get_object()
         return blog.author == self.request.user
+
 
 
 class BlogDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
@@ -86,6 +86,7 @@ class BlogDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     def test_func(self):
         blog = self.get_object()
         return blog.author == self.request.user
+
 
 
 @login_required

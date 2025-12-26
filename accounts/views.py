@@ -10,7 +10,9 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from .forms import EditProfileForm
 from django.contrib.auth.views import PasswordChangeView
-
+from django.utils import timezone
+from django.core.mail import send_mail
+from django.conf import settings
 
 
 User = get_user_model()

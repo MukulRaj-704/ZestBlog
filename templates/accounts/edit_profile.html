@@ -3,11 +3,63 @@
 {% block title %}Edit Profile{% endblock %}
 
 {% block content %}
-<h2>Edit Profile</h2>
 
-<form method="post">
-  {% csrf_token %}
-  {{ form.as_p }}
-  <button type="submit">Save Changes</button>
-</form>
+<div class="max-w-2xl mx-auto px-4 py-10">
+
+  <!-- Card -->
+  <div class="bg-white dark:bg-[#1a1a2e] rounded-xl shadow-lg border border-gray-200 dark:border-gray-800 overflow-hidden">
+
+    <!-- Header -->
+    <div class="p-6 border-b dark:border-gray-700">
+      <h2 class="text-xl font-bold text-gray-900 dark:text-white">
+        Edit Profile
+      </h2>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+        Update your personal information
+      </p>
+    </div>
+
+    <!-- Form -->
+    <form method="post" class="p-6 space-y-5">
+      {% csrf_token %}
+
+      {% for field in form %}
+        <div>
+          <label class="block text-sm text-black font-medium text-gray-700 dark:text-gray-300 mb-1">
+            {{ field.label }}
+          </label>
+
+          {{ field }}
+
+          {% if field.help_text %}
+            <p class="text-xs text-gray-400 mt-1">{{ field.help_text }}</p>
+          {% endif %}
+
+          {% for error in field.errors %}
+            <p class="text-xs text-red-600 mt-1">{{ error }}</p>
+          {% endfor %}
+        </div>
+      {% endfor %}
+
+      <!-- Buttons -->
+      <div class="flex items-center justify-between pt-4">
+        <a href="{% url 'user_profile' request.user.username %}"
+           class="px-6 py-2.5 rounded-lg bg-primary text-white font-semibold
+                 hover:bg-blue-700 transition shadow-md">
+          Cancel
+        </a>
+
+        <button
+          type="submit"
+          class="px-6 py-2.5 rounded-lg bg-primary text-white font-semibold
+                 hover:bg-blue-700 transition shadow-md"
+        >
+          Save Changes
+        </button>
+      </div>
+    </form>
+
+  </div>
+</div>
+
 {% endblock %}

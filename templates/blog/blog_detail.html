@@ -1,62 +1,197 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
+{% block title %}{{ blog.title }}{% endblock %}
+
 {% block content %}
-<h1>{{ blog.title }}</h1>
-<p>by {{ blog.author }} | {{ blog.created_at }}</p>
 
-{% if blog.cover_image %}
-  <img src="{{ blog.cover_image.url }}" width="300">
-{% endif %}
+<div class="max-w-4xl mx-auto px-6 py-12">
 
-<p>{{ blog.content }}</p>
-<hr>
-<h3>Comments</h3>
+  <!-- BLOG CARD -->
+  <article class="bg-slate-50 rounded-2xl shadow-2xl overflow-hidden">
 
-{% for comment in comments %}
-  <p>
-    <strong>{{ comment.author }}</strong>:
-    {{ comment.text }}
-    <br>
-    <small>{{ comment.created_at }}</small>
-  </p>
-{% empty %}
-  <p>No comments yet.</p>
-{% endfor %}
-
-<hr>
-
-<hr>
-
-<form method="post" action="{% url 'blog_like' blog.slug %}">
-  {% csrf_token %}
-
-  {% if user.is_authenticated %}
-    {% if user in blog.likes.all %}
-      <button type="submit">Unlike</button>
-    {% else %}
-      <button type="submit">Like</button>
+    {% if blog.cover_image %}
+      <img
+        src="{{ blog.cover_image.url }}"
+        alt="{{ blog.title }}"
+        class="w-full h-72 object-cover"
+      >
     {% endif %}
-  {% else %}
-    <a href="{% url 'login' %}">Login to like</a>
-  {% endif %}
-</form>
 
-<p>❤️ {{ blog.total_likes }} likes</p>
-{% if user.is_authenticated %}
-  <h4>Add a comment</h4>
-  <form method="post">
-    {% csrf_token %}
-    {{ comment_form.as_p }}
-    <button type="submit">Post Comment</button>
-  </form>
+    <div class="p-8">
+
+      <!-- Title -->
+      <h1 class="text-3xl font-bold text-slate-900 mb-3">
+        {{ blog.title }}
+      </h1>
+
+      <!-- Author -->
+      <div class="flex items-center gap-3 text-sm text-slate-600 mb-6">
+        <div class="w-9 h-9 rounded-full bg-slate-200 flex items-center justify-center font-semibold">
+          {{ blog.author.username|slice:":1"|upper }}
+        </div>
+        <span>{{ blog.author.username }}</span>
+        <span>• {{ blog.created_at|date:"M d, Y" }}</span>
+      </div>
+
+      <!-- Content -->
+      <div class="prose max-w-none text-slate-800 leading-relaxed">
+        {{ blog.content|linebreaks }}
+      </div>
+
+      <!-- LIKE SECTION -->
+      <div class="mt-8 flex items-center gap-4">
+
+        <form method="post" action="{% url 'blog_like' blog.slug %}">
+          {% csrf_token %}
+
+          {% if user.is_authenticated %}
+            {% if user in blog.likes.all %}
+              <button
+                type="submit"
+                class="px-5 py-2 rounded-full bg-red-100 text-red-600 font-semibold hover:bg-red-200">
+                ❤️ Unlike
+              </button>
+            {% else %}
+              <button
+                type="submit"
+                class="px-5 py-2 rounded-full bg-blue-100 text-blue-600 font-semibold hover:bg-blue-200">
+                👍 Like
+              </button>
+            {% endif %}
+          {% else %}
+            <a
+              href="{% url 'login' %}"
+              class="text-blue-600 font-semibold">
+              Login to like
+            </a>
+          {% endif %}
+        </form>
+
+        <span class="text-slate-600">
+          ❤️ {{ blog.total_likes }} likes
+        </span>
+
+      </div>
+
+      <!-- EDIT / DELETE -->
+      {% if user == blog.author %}
+        <div class="mt-6 flex gap-4">
+          <a
+            href="{% url 'blog_update' blog.slug %}"
+            class="text-blue-600 font-semibold hover:underline">
+            ✏ Edit
+          </a>
+          <a
+            href="{% url 'blog_delete' blog.slug %}"
+            class="text-red-600 font-semibold hover:underline">
+            🗑 Delete
+          </a>
+        </div>
+      {% endif %}
+
+    </div>
+  </article>
+
+  <!-- COMMENTS -->
+  <section class="mt-12">
+
+    <h2 class="text-2xl font-bold text-slate-100 mb-6">
+      💬 Comments
+    </h2>
+
+    <!-- Comment List -->
+    <div class="space-y-4">
+      {% for comment in comments %}
+        <div class="bg-slate-50 rounded-xl p-4 shadow">
+          <div class="flex items-center gap-2 text-sm text-slate-600 mb-1">
+            <strong class="text-blue-900">{{ comment.author.username }}</strong>
+            <span>• {{ comment.created_at|date:"M d, Y H:i" }}</span>
+          </div>
+          <div class="prose prose-slate max-w-none text-slate-900">
+  {{ comment.text|linebreaks }}
+</div>
+        </div>
+      {% empty %}
+        <p class="text-slate-300">
+          No comments yet.
+        </p>
+      {% endfor %}
+    </div>
+
+    <!-- ADD COMMENT -->
+   {% if user.is_authenticated %}
+  <!-- ADD COMMENT BUTTON -->
+  <button
+    id="showCommentBtn"
+    class="mt-8 px-6 py-2 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700">
+    Add a comment
+  </button>
+
+  <!-- COMMENT FORM (HIDDEN INITIALLY) -->
+  <div
+    id="commentBox"
+    class="mt-6 bg-slate-50 rounded-xl p-6 shadow hidden">
+
+    <h3 class="text-lg font-bold text-slate-900 mb-3">
+      Write your comment
+    </h3>
+
+    <form method="post">
+      {% csrf_token %}
+      {{ comment_form.text }}
+
+      <div class="mt-4 flex gap-3">
+        <button
+          type="submit"
+          class="px-6 py-2 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700">
+          Post Comment
+        </button>
+
+        <button
+          type="button"
+          id="cancelComment"
+          class="px-6 py-2 rounded-xl bg-slate-200 text-slate-700 hover:bg-slate-300">
+          Cancel
+        </button>
+      </div>
+    </form>
+  </div>
 {% else %}
-  <p>
-    <a href="{% url 'login' %}">Login</a> to comment.
+  <p class="mt-6 text-slate-300">
+    <a href="{% url 'login' %}" class="text-blue-400 font-semibold">
+      Login
+    </a> to comment.
   </p>
 {% endif %}
 
 
-{% if user == blog.author %}
-  <a href="{% url 'blog_update' blog.slug %}">Edit</a>
-  <a href="{% url 'blog_delete' blog.slug %}">Delete</a>
-{% endif %}
+  </section>
+
+</div>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const showBtn = document.getElementById('showCommentBtn');
+    const commentBox = document.getElementById('commentBox');
+    const cancelBtn = document.getElementById('cancelComment');
+
+    if (showBtn && commentBox) {
+      showBtn.addEventListener('click', function () {
+        commentBox.classList.remove('hidden');
+        showBtn.classList.add('hidden');
+
+        const textarea = commentBox.querySelector('textarea');
+        if (textarea) textarea.focus();
+      });
+    }
+
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', function () {
+        commentBox.classList.add('hidden');
+        showBtn.classList.remove('hidden');
+      });
+    }
+  });
+</script>
+
+
+
 {% endblock %}
