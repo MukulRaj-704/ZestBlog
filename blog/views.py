@@ -13,7 +13,7 @@ class BlogListView(ListView):
     model = Blog
     template_name = 'blog/blog_list.html'
     context_object_name = 'blogs'
-    paginate_by = 5
+    paginate_by = 6
     ordering = ['-created_at']
 
     def get_queryset(self):

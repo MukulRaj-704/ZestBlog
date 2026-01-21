@@ -56,10 +56,7 @@ class UserProfileView(ListView):
 
     def get_queryset(self):
         self.profile_user = User.objects.get(username=self.kwargs['username'])
-        return Blog.objects.filter(
-            author=self.profile_user,
-            is_published=True
-        ).order_by('-created_at')
+        return Blog.objects.filter(author=self.profile_user,is_published=True).order_by('-created_at')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
