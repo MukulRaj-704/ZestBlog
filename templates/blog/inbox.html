@@ -283,7 +283,8 @@
   const conversationId = "{{ active_conversation.id }}";
   const currentUser = "{{ request.user.username }}";
   const currentUserId = {{ request.user.id }};
-  const wsUrl = `ws://${window.location.host}/ws/chat/${conversationId}/`;
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const wsUrl = `${protocol}//${window.location.host}/ws/chat/${conversationId}/`;
 
   const messagesBox = document.getElementById('messages-box');
   const messageInput = document.getElementById('message-input');
