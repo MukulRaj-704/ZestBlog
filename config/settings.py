@@ -120,3 +120,12 @@ else:
     }
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# CSRF fix for Railway
+CSRF_TRUSTED_ORIGINS = [
+    'https://web-production-41478.up.railway.app',
+    'https://*.railway.app',
+]
+
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
