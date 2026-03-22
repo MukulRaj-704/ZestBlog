@@ -356,6 +356,7 @@ def get_mutual_friends(request):
 
 
 @login_required
+@login_required
 def send_file(request, conversation_id):
     if request.method != 'POST':
         return redirect('conversation_detail', conversation_id=conversation_id)
@@ -368,7 +369,7 @@ def send_file(request, conversation_id):
 
     uploaded_file = request.FILES.get('file')
     if not uploaded_file:
-        return redirect('conversation_detail', conversation_id=conversation_id)
+        return JsonResponse({'success': False, 'error': 'No file'})
 
     file_name = uploaded_file.name
     extension = file_name.split('.')[-1].lower()
@@ -388,7 +389,7 @@ def send_file(request, conversation_id):
         return JsonResponse({
             'success': True,
             'message_id': message.id,
-            'file_url': message.file.url,
+            'file_url': message.file.url,  # Cloudinary returns full URL
             'file_name': message.file_name,
             'file_type': message.file_type,
             'sender': request.user.username,

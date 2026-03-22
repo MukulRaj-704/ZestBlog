@@ -427,10 +427,13 @@ if (fileInput) {
 
     try {
       const res = await fetch(`/inbox/${conversationId}/send-file/`, {
-        method: 'POST',
-        headers: { 'X-Requested-With': 'XMLHttpRequest' },
-        body: formData,
-      });
+  method: 'POST',
+  headers: {
+    'X-Requested-With': 'XMLHttpRequest',
+  },
+  credentials: 'same-origin',  // ← add this
+  body: formData,
+});
 
       const data = await res.json();
       uploadingDiv.remove();
