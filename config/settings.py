@@ -22,8 +22,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'cloudinary_storage',   # ← AFTER staticfiles
-    'cloudinary',           # ← AFTER cloudinary_storage
+    'cloudinary_storage',   # ← must be here after staticfiles
+    'cloudinary',
     'accounts',
     'blog',
 ]
@@ -125,10 +125,14 @@ SESSION_COOKIE_SECURE = True
 
 # Cloudinary — media storage on production
 # Cloudinary
+# Cloudinary
 CLOUDINARY_URL = os.environ.get('CLOUDINARY_URL')
 if CLOUDINARY_URL:
     DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-    MEDIA_URL = '/media/'  # keep this as /media/
+    CLOUDINARY_STORAGE = {
+        'CLOUDINARY_URL': CLOUDINARY_URL
+    }
+    MEDIA_URL = '/media/'
 else:
     MEDIA_URL = '/media/'
     MEDIA_ROOT = BASE_DIR / 'media'
