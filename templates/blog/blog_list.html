@@ -1,124 +1,550 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="m+ max-w-7xl mx-auto px-6 py-8">
+<div class="w-full max-w-[1600px] mx-auto px-6 py-6">
+  <div class="flex gap-5 w-full">
 
-  <!-- 🔍 Search (CENTERED) -->
-  <form method="get" class="mb-10">
-    <div class="flex justify-center gap-3">
-      <input
-  type="text"
-  name="q"
-  placeholder="Search blogs..."
-  value="{{ request.GET.q }}"
-  class="w-full max-w-xl font-bold text-black placeholder-gray-500
-         rounded-xl border px-4 py-2
-         focus:outline-none focus:ring-2 focus:ring-blue-500"
-/>
-      <button
-        type="submit"
-        class="px-5 py-2 rounded-xl bg-blue-600 text-white font-semibold">
-        Search
-      </button>
-    </div>
-  </form>
+    <!-- ── LEFT SIDEBAR (STICKY) ──────────────────────────────── -->
+    <div class="hidden lg:flex flex-col gap-4 w-72 flex-shrink-0 pl-2">
+      <div class="sticky top-4 flex flex-col gap-4">
 
-  <!-- ✍ Create Blog (CENTERED) -->
-  {% if user.is_authenticated %}
-    <div class="flex justify-center mb-12">
-      <a
-        href="{% url 'blog_create' %}"
-        class="inline-flex items-center gap-2 px-5 py-2
-               rounded-full bg-blue-600 text-white font-semibold shadow">
-        ✍ Create Blog
-      </a>
-    </div>
-  {% endif %}
-<!-- 📰 Blog Grid (AUTO BALANCED) -->
-<div class="grid gap-10 justify-center
-            [grid-template-columns:repeat(auto-fit,minmax(380px,1fr))]">
+        {% if user.is_authenticated %}
+        <!-- Profile Card -->
+        <div class="bg-white dark:bg-[#1a1a2e] rounded-2xl border border-gray-200
+                    dark:border-gray-800 overflow-hidden shadow-sm">
+          <div class="h-20 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-500"></div>
+          <div class="px-4 pb-4">
+            <div class="w-16 h-16 rounded-full border-4 border-white dark:border-[#1a1a2e]
+                        bg-blue-600 flex items-center justify-center text-white
+                        font-bold text-xl -mt-8 overflow-hidden shadow-lg">
+              {% if user.profile.avatar %}
+                <img src="{{ user.profile.avatar.url }}"
+                     class="w-16 h-16 object-cover rounded-full">
+              {% else %}
+                {{ user.username|first|upper }}
+              {% endif %}
+            </div>
+            <h3 class="font-bold text-gray-900 dark:text-white mt-2 text-lg">
+              {{ user.username }}
+            </h3>
+            {% if user.profile.bio %}
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 leading-relaxed">
+                {{ user.profile.bio|truncatechars:80 }}
+              </p>
+            {% endif %}
 
-  {% for blog in blogs %}
-<article
-  class="max-w-md w-full rounded-2xl overflow-hidden
-         bg-slate-50 text-slate-900
-         shadow-xl hover:shadow-2xl
-         transition duration-300">
+            <!-- Stats -->
+            <div class="flex gap-2 mt-3">
+              <a href="{% url 'user_profile' user.username %}"
+                 class="flex-1 text-center hover:bg-gray-50 dark:hover:bg-gray-800
+                        rounded-xl p-2 transition cursor-pointer">
+                <p class="text-lg font-bold text-gray-900 dark:text-white">
+                  {{ user.blogs.count }}
+                </p>
+                <p class="text-xs text-gray-500">Blogs</p>
+              </a>
+              <a href="{% url 'user_profile' user.username %}"
+                 class="flex-1 text-center hover:bg-gray-50 dark:hover:bg-gray-800
+                        rounded-xl p-2 transition cursor-pointer">
+                <p class="text-lg font-bold text-gray-900 dark:text-white">
+                  {{ user.profile.followers_count }}
+                </p>
+                <p class="text-xs text-gray-500">Followers</p>
+              </a>
+              <a href="{% url 'user_profile' user.username %}"
+                 class="flex-1 text-center hover:bg-gray-50 dark:hover:bg-gray-800
+                        rounded-xl p-2 transition cursor-pointer">
+                <p class="text-lg font-bold text-gray-900 dark:text-white">
+                  {{ user.profile.following_count }}
+                </p>
+                <p class="text-xs text-gray-500">Following</p>
+              </a>
+            </div>
 
-
-    {% if blog.cover_image %}
-      <img
-        src="{{ blog.cover_image.url }}"
-        alt="{{ blog.title }}"
-        class="w-full h-52 object-cover"
-      >
-    {% endif %}
-
-    <div class="p-6 bg-slate-50" >
-
-      <h2 class="text-xl font-bold mb-2">
-        <a href="{% url 'blog_detail' blog.slug %}" class="hover:text-slate-500">
-          {{ blog.title }}
-        </a>
-      </h2>
-
-      <div class="flex items-center gap-3 text-sm text-gray-500 mb-3">
-        <div class="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center font-semibold">
-          {{ blog.author.username|slice:":1"|upper }}
-        </div>
-        <span>{{ blog.author.username }}</span>
-        <span>• {{ blog.created_at|date:"M d, Y" }}</span>
-      </div>
-
-      <p class="text-gray-700 mb-4 leading-relaxed line-clamp-3">
-        {{ blog.content|truncatewords:28 }}
-      </p>
-
-      <div class="flex items-center justify-between text-sm text-gray-500">
-        <div class="flex gap-4">
-          <span>👍 {{ blog.likes.count }}</span>
-          <span>💬 {{ blog.comments.count }}</span>
+            <!-- Edit Profile -->
+            <a href="{% url 'edit_profile' %}"
+               class="block text-center mt-3 py-2 rounded-xl border border-gray-300
+                      dark:border-gray-600 text-sm font-semibold text-gray-700
+                      dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+              Edit Profile
+            </a>
+          </div>
         </div>
 
-        <a href="{% url 'blog_detail' blog.slug %}"
-           class="text-blue-600 font-semibold hover:underline">
-          Read more →
+        <!-- Quick Links -->
+        <div class="bg-white dark:bg-[#1a1a2e] rounded-2xl border border-gray-200
+                    dark:border-gray-800 p-3 shadow-sm space-y-1">
+          <a href="{% url 'blog_list' %}"
+             class="flex items-center gap-3 px-3 py-2.5 rounded-xl
+                    bg-blue-50 dark:bg-blue-900/20 text-blue-600 font-semibold text-sm">
+            <span class="text-lg">🏠</span> Home
+          </a>
+          <a href="{% url 'user_profile' user.username %}"
+             class="flex items-center gap-3 px-3 py-2.5 rounded-xl
+                    hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700
+                    dark:text-gray-300 font-medium text-sm transition">
+            <span class="text-lg">👤</span> Profile
+          </a>
+          <a href="{% url 'inbox' %}"
+             class="flex items-center gap-3 px-3 py-2.5 rounded-xl
+                    hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700
+                    dark:text-gray-300 font-medium text-sm transition">
+            <span class="text-lg">💬</span> Messages
+            {% if unread_message_count %}
+              <span class="ml-auto bg-green-500 text-white text-xs font-bold
+                           rounded-full px-1.5 py-0.5 animate-pulse">
+                {{ unread_message_count }}
+              </span>
+            {% endif %}
+          </a>
+          <a href="{% url 'blog_create' %}"
+             class="flex items-center gap-3 px-3 py-2.5 rounded-xl
+                    hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700
+                    dark:text-gray-300 font-medium text-sm transition">
+            <span class="text-lg">✍</span> Create Blog
+          </a>
+          <a href="{% url 'following_feed' %}"
+             class="flex items-center gap-3 px-3 py-2.5 rounded-xl
+                    hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700
+                    dark:text-gray-300 font-medium text-sm transition">
+            <span class="text-lg">👥</span> Following Feed
+          </a>
+        </div>
+        {% endif %}
+
+      </div>
+    </div>
+
+    <!-- ── CENTER FEED ────────────────────────────────────────── -->
+    <div class="flex-1 min-w-0 px-2">
+
+      <!-- Search -->
+      <form method="get" class="mb-4">
+        <div class="flex gap-2">
+          <input type="text" name="q"
+                 placeholder="Search blogs..."
+                 value="{{ request.GET.q }}"
+                 class="flex-1 bg-white dark:bg-[#1a1a2e] text-gray-900
+                        dark:text-white placeholder-gray-400 rounded-xl border
+                        border-gray-200 dark:border-gray-700 px-4 py-2.5
+                        focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+          <button type="submit"
+            class="px-5 py-2.5 rounded-xl bg-blue-600 text-white
+                   font-semibold text-sm hover:bg-blue-700 transition">
+            Search
+          </button>
+        </div>
+      </form>
+
+      <!-- Feed Tabs -->
+      <div class="flex border-b border-gray-200 dark:border-gray-700 mb-4">
+        <a href="{% url 'blog_list' %}"
+           class="px-6 py-3 text-sm font-semibold text-blue-600
+                  border-b-2 border-blue-600">
+          For You
         </a>
+        {% if user.is_authenticated %}
+          <a href="{% url 'following_feed' %}"
+             class="px-6 py-3 text-sm font-medium text-gray-500
+                    dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200
+                    hover:bg-gray-50 dark:hover:bg-gray-800 transition rounded-t-xl">
+            Following
+          </a>
+        {% endif %}
       </div>
 
+      <!-- Blog Cards -->
+      <div class="space-y-4">
+        {% for blog in blogs %}
+          <article
+            class="bg-white dark:bg-[#1a1a2e] rounded-2xl border
+                   border-gray-200 dark:border-gray-800 overflow-hidden
+                   hover:border-blue-300 dark:hover:border-blue-700
+                   hover:shadow-lg hover:-translate-y-0.5
+                   transition-all duration-200 group">
+
+            <div class="p-5">
+              <!-- Author row -->
+              <div class="flex items-center justify-between mb-3">
+                <a href="{% url 'user_profile' blog.author.username %}"
+                   class="flex items-center gap-3 group/author">
+                  <div class="w-10 h-10 rounded-full overflow-hidden bg-blue-600
+                              flex items-center justify-center text-white
+                              font-bold text-sm flex-shrink-0 ring-2
+                              ring-transparent group-hover/author:ring-blue-400 transition">
+                    {% if blog.author.profile.avatar %}
+                      <img src="{{ blog.author.profile.avatar.url }}"
+                           class="w-10 h-10 object-cover">
+                    {% else %}
+                      {{ blog.author.username|first|upper }}
+                    {% endif %}
+                  </div>
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <p class="text-sm font-semibold text-gray-900 dark:text-white
+                                 group-hover/author:text-blue-600 transition">
+                        {{ blog.author.username }}
+                      </p>
+                      <!-- Following badge -->
+                      {% if blog.author.id in following_ids %}
+                        <span class="text-xs px-2 py-0.5 rounded-full
+                                     bg-blue-100 dark:bg-blue-900/30
+                                     text-blue-600 font-medium">
+                          Following
+                        </span>
+                      {% endif %}
+                    </div>
+                    <p class="text-xs text-gray-400">
+                      {{ blog.created_at|timesince }} ago
+                      · {% with words=blog.content|wordcount %}
+                          {{ words|floatformat:0 }} words
+                          · {{ words|divisibleby:200|yesno:"1,0" }} min read
+                        {% endwith %}
+                    </p>
+                  </div>
+                </a>
+
+                <!-- Follow button -->
+                {% if user.is_authenticated and user != blog.author %}
+                  <button
+                    data-url="{% url 'follow_toggle' blog.author.username %}"
+                    data-following="{% if blog.author.id in following_ids %}true{% else %}false{% endif %}"
+                    onclick="toggleFollow(this)"
+                    class="px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-200
+                           {% if blog.author.id in following_ids %}
+                             bg-gray-100 dark:bg-gray-700 text-gray-700
+                             dark:text-gray-300 border border-gray-300
+                             dark:border-gray-600 hover:bg-red-50 hover:text-red-500
+                             hover:border-red-300
+                           {% else %}
+                             bg-blue-600 text-white hover:bg-blue-700
+                             hover:scale-105
+                           {% endif %}">
+                    {% if blog.author.id in following_ids %}Following{% else %}Follow{% endif %}
+                  </button>
+                {% endif %}
+              </div>
+
+              <!-- Cover image -->
+              {% if blog.cover_image %}
+                <a href="{% url 'blog_detail' blog.slug %}">
+                  <img src="{{ blog.cover_image.url }}"
+                       alt="{{ blog.title }}"
+                       class="w-full h-52 object-cover rounded-xl mb-3
+                              group-hover:brightness-105 transition duration-200">
+                </a>
+              {% endif %}
+
+              <!-- Title -->
+              <a href="{% url 'blog_detail' blog.slug %}">
+                <h2 class="text-lg font-bold text-gray-900 dark:text-white
+                           hover:text-blue-600 transition mb-2 leading-snug">
+                  {{ blog.title }}
+                </h2>
+              </a>
+
+              <!-- Excerpt -->
+              <p class="text-sm text-gray-600 dark:text-gray-400
+                        leading-relaxed line-clamp-2 mb-4">
+                {{ blog.content|truncatewords:25 }}
+              </p>
+
+              <!-- Footer -->
+              <div class="flex items-center justify-between pt-3
+                          border-t border-gray-100 dark:border-gray-700">
+                <div class="flex items-center gap-1">
+
+                  <!-- Inline Like button -->
+                  <button
+                    data-slug="{{ blog.slug }}"
+                    data-liked="false"
+                    onclick="toggleLike(this)"
+                    class="like-btn flex items-center gap-1.5 px-3 py-1.5 rounded-full
+                           text-sm text-gray-500 hover:text-red-500
+                           hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200">
+                    <span class="like-icon">🔥</span>
+                    <span class="like-count">{{ blog.likes.count }}</span>
+                  </button>
+
+                  <!-- Comments -->
+                  <a href="{% url 'blog_detail' blog.slug %}#comments"
+                     class="flex items-center gap-1.5 px-3 py-1.5 rounded-full
+                            text-sm text-gray-500 hover:text-blue-500
+                            hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200">
+                    💬 <span>{{ blog.comments.count }}</span>
+                  </a>
+
+                  <!-- Share -->
+                  {% if user.is_authenticated %}
+                    <a href="{% url 'start_conversation' blog.author.username %}"
+                       class="flex items-center gap-1.5 px-3 py-1.5 rounded-full
+                              text-sm text-gray-500 hover:text-green-500
+                              hover:bg-green-50 dark:hover:bg-green-900/20 transition-all duration-200">
+                      📤
+                    </a>
+                  {% endif %}
+                </div>
+
+                <a href="{% url 'blog_detail' blog.slug %}"
+                   class="text-blue-600 text-sm font-semibold hover:underline
+                          flex items-center gap-1 group/read">
+                  Read more
+                  <span class="group-hover/read:translate-x-1 transition-transform duration-200">→</span>
+                </a>
+              </div>
+            </div>
+          </article>
+        {% empty %}
+          <div class="text-center py-16 text-gray-400">
+            <p class="text-5xl mb-4">📝</p>
+            <p class="text-lg font-semibold dark:text-white">No blogs yet</p>
+            <p class="text-sm mt-1">Be the first to write something!</p>
+            {% if user.is_authenticated %}
+              <a href="{% url 'blog_create' %}"
+                 class="inline-block mt-4 px-6 py-2.5 rounded-full bg-blue-600
+                        text-white font-semibold hover:bg-blue-700 transition">
+                Write First Blog
+              </a>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+
+      <!-- Pagination -->
+      {% if is_paginated %}
+      <div class="flex items-center justify-between mt-8">
+        {% if page_obj.has_previous %}
+          <a href="?q={{ request.GET.q }}&page={{ page_obj.previous_page_number }}"
+             class="px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-700
+                    text-sm text-gray-700 dark:text-gray-300
+                    hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+            ← Previous
+          </a>
+        {% else %}<span></span>{% endif %}
+
+        <span class="text-sm text-gray-500">
+          Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+        </span>
+
+        {% if page_obj.has_next %}
+          <a href="?q={{ request.GET.q }}&page={{ page_obj.next_page_number }}"
+             class="px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-700
+                    text-sm text-gray-700 dark:text-gray-300
+                    hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+            Next →
+          </a>
+        {% else %}<span></span>{% endif %}
+      </div>
+      {% endif %}
+
     </div>
-  </article>
-  {% endfor %}
 
-</div>
+    <!-- ── RIGHT SIDEBAR (STICKY) ─────────────────────────────── -->
+    <div class="hidden xl:flex flex-col gap-4 w-72 flex-shrink-0 pr-2">
+      <div class="sticky top-4 flex flex-col gap-4">
 
+        <!-- Write Blog CTA -->
+        {% if user.is_authenticated %}
+          <a href="{% url 'blog_create' %}"
+             class="flex items-center justify-center gap-2 px-4 py-3 rounded-2xl
+                    bg-gradient-to-r from-blue-600 to-purple-600 text-white
+                    font-semibold hover:from-blue-700 hover:to-purple-700
+                    transition shadow-lg hover:shadow-xl hover:-translate-y-0.5
+                    transform duration-200">
+            ✍ Write a Blog
+          </a>
+        {% endif %}
 
-  <!-- 📄 Pagination -->
-  {% if is_paginated %}
-  <div class="flex justify-center gap-4 mt-14">
-    {% if page_obj.has_previous %}
-      <a
-        href="?q={{ request.GET.q }}&page={{ page_obj.previous_page_number }}"
-        class="px-4 py-2 text-white rounded-xl border">
-        ← Previous
-      </a>
-    {% endif %}
+        <!-- Who to Follow -->
+        {% if suggested_users %}
+          <div class="bg-white dark:bg-[#1a1a2e] rounded-2xl border
+                      border-gray-200 dark:border-gray-800 p-4 shadow-sm">
+            <h3 class="font-bold text-gray-900 dark:text-white mb-4 text-sm">
+              Who to follow
+            </h3>
+            <div class="space-y-4">
+              {% for profile in suggested_users %}
+                <div class="flex items-center gap-3 group/suggest">
+                  <a href="{% url 'user_profile' profile.user.username %}"
+                     class="flex-shrink-0">
+                    <div class="w-10 h-10 rounded-full overflow-hidden bg-blue-600
+                                flex items-center justify-center text-white font-bold text-sm
+                                ring-2 ring-transparent group-hover/suggest:ring-blue-400 transition">
+                      {% if profile.avatar %}
+                        <img src="{{ profile.avatar.url }}" class="w-10 h-10 object-cover">
+                      {% else %}
+                        {{ profile.user.username|first|upper }}
+                      {% endif %}
+                    </div>
+                  </a>
+                  <div class="flex-1 min-w-0">
+                    <a href="{% url 'user_profile' profile.user.username %}"
+                       class="text-sm font-semibold text-gray-900 dark:text-white
+                              hover:text-blue-600 transition truncate block">
+                      {{ profile.user.username }}
+                    </a>
+                    <p class="text-xs text-gray-400">
+                      {{ profile.follower_count }} follower{{ profile.follower_count|pluralize }}
+                    </p>
+                  </div>
+                  <a href="{% url 'follow_toggle' profile.user.username %}"
+                     class="px-3 py-1 rounded-full bg-blue-600 text-white text-xs
+                            font-semibold hover:bg-blue-700 transition flex-shrink-0
+                            hover:scale-105 transform duration-200">
+                    Follow
+                  </a>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        {% endif %}
 
-    <span class="px-4 py-2 text-white-600">
-      Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-    </span>
+        <!-- Trending Blogs -->
+        {% if trending_blogs %}
+          <div class="bg-white dark:bg-[#1a1a2e] rounded-2xl border
+                      border-gray-200 dark:border-gray-800 p-4 shadow-sm">
+            <h3 class="font-bold text-gray-900 dark:text-white mb-4 text-sm">
+              🔥 Trending
+            </h3>
+            <div class="space-y-3">
+              {% for blog in trending_blogs %}
+                <a href="{% url 'blog_detail' blog.slug %}"
+                   class="flex items-start gap-3 hover:bg-gray-50
+                          dark:hover:bg-gray-800 rounded-xl p-2 transition group/trend">
+                  <span class="text-lg font-bold text-gray-300 dark:text-gray-600
+                               flex-shrink-0 w-6 text-center">
+                    {{ forloop.counter }}
+                  </span>
+                  <div class="min-w-0">
+                    <p class="text-sm font-semibold text-gray-900 dark:text-white
+                               line-clamp-2 leading-snug
+                               group-hover/trend:text-blue-600 transition">
+                      {{ blog.title }}
+                    </p>
+                    <p class="text-xs text-gray-400 mt-0.5">
+                      🔥 {{ blog.total_likes }} · {{ blog.author.username }}
+                    </p>
+                  </div>
+                </a>
+              {% endfor %}
+            </div>
+          </div>
+        {% endif %}
 
-    {% if page_obj.has_next %}
-      <a
-        href="?q={{ request.GET.q }}&page={{ page_obj.next_page_number }}"
-        class="px-4 py-2 rounded-xl border">
-        Next →
-      </a>
-    {% endif %}
+      </div>
+    </div>
+
   </div>
-  {% endif %}
-
 </div>
 
+<!-- Back to top button -->
+<button id="back-to-top"
+        onclick="window.scrollTo({top:0,behavior:'smooth'})"
+        class="hidden fixed bottom-6 right-6 w-12 h-12 rounded-full
+               bg-blue-600 text-white shadow-lg hover:bg-blue-700
+               transition-all duration-200 hover:scale-110 z-50
+               flex items-center justify-center text-xl">
+  ↑
+</button>
+
+{% csrf_token %}
+<script>
+// ── Back to top ──────────────────────────────────────────
+const backToTop = document.getElementById('back-to-top');
+window.addEventListener('scroll', () => {
+  if (window.scrollY > 400) {
+    backToTop.classList.remove('hidden');
+    backToTop.classList.add('flex');
+  } else {
+    backToTop.classList.add('hidden');
+    backToTop.classList.remove('flex');
+  }
+});
+
+// ── Follow toggle ────────────────────────────────────────
+async function toggleFollow(btn) {
+  const url = btn.dataset.url;
+  const isFollowing = btn.dataset.following === 'true';
+  const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+  // Loading state
+  btn.disabled = true;
+  btn.style.opacity = '0.6';
+
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': csrfToken,
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+    });
+    const data = await res.json();
+
+    if (data.is_following) {
+      btn.textContent = 'Following';
+      btn.dataset.following = 'true';
+      btn.className = 'px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 ' +
+        'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 ' +
+        'border border-gray-300 dark:border-gray-600 ' +
+        'hover:bg-red-50 hover:text-red-500 hover:border-red-300';
+    } else {
+      btn.textContent = 'Follow';
+      btn.dataset.following = 'false';
+      btn.className = 'px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 ' +
+        'bg-blue-600 text-white hover:bg-blue-700 hover:scale-105';
+    }
+  } catch (err) {
+    console.error('Follow failed:', err);
+  } finally {
+    btn.disabled = false;
+    btn.style.opacity = '1';
+  }
+}
+
+// ── Inline like toggle ───────────────────────────────────
+async function toggleLike(btn) {
+  const slug = btn.dataset.slug;
+  const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+  const countEl = btn.querySelector('.like-count');
+  const iconEl = btn.querySelector('.like-icon');
+
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(`/${slug}/like/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': csrfToken,
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+    });
+
+    // Toggle count optimistically
+    const current = parseInt(countEl.textContent);
+    const liked = btn.dataset.liked === 'true';
+
+    if (liked) {
+      countEl.textContent = current - 1;
+      btn.dataset.liked = 'false';
+      btn.classList.remove('text-red-500', 'bg-red-50');
+      iconEl.textContent = '🔥';
+    } else {
+      countEl.textContent = current + 1;
+      btn.dataset.liked = 'true';
+      btn.classList.add('text-red-500', 'bg-red-50');
+      iconEl.textContent = '❤️';
+
+      // Pulse animation
+      btn.style.transform = 'scale(1.2)';
+      setTimeout(() => btn.style.transform = 'scale(1)', 150);
+    }
+  } catch (err) {
+    console.error('Like failed:', err);
+  } finally {
+    btn.disabled = false;
+  }
+}
+</script>
 
 {% endblock %}

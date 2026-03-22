@@ -2,34 +2,54 @@
 {% block title %}{{ blog.title }}{% endblock %}
 
 {% block content %}
-
 <div class="max-w-4xl mx-auto px-6 py-12">
 
-  <!-- BLOG CARD -->
   <article class="bg-slate-50 rounded-2xl shadow-2xl overflow-hidden">
 
     {% if blog.cover_image %}
-      <img
-        src="{{ blog.cover_image.url }}"
-        alt="{{ blog.title }}"
-        class="w-full h-72 object-cover"
-      >
+      <img src="{{ blog.cover_image.url }}" alt="{{ blog.title }}"
+           class="w-full h-72 object-cover">
     {% endif %}
 
     <div class="p-8">
+      <h1 class="text-3xl font-bold text-slate-900 mb-4">{{ blog.title }}</h1>
 
-      <!-- Title -->
-      <h1 class="text-3xl font-bold text-slate-900 mb-3">
-        {{ blog.title }}
-      </h1>
+      <!-- Author Card -->
+      <div class="flex items-center justify-between bg-white rounded-xl border
+                  border-slate-200 px-4 py-3 mb-6 shadow-sm">
+        <a href="{% url 'user_profile' blog.author.username %}"
+           class="flex items-center gap-3 group">
+          <div class="w-10 h-10 rounded-full bg-slate-200 flex items-center
+                      justify-center font-bold text-slate-600 text-sm flex-shrink-0">
+            {{ blog.author.username|first|upper }}
+          </div>
+          <div>
+            <p class="text-sm font-semibold text-slate-800 group-hover:text-blue-600 transition">
+              {{ blog.author.username }}
+            </p>
+            <p class="text-xs text-slate-400">{{ blog.created_at|date:"M d, Y" }}</p>
+          </div>
+        </a>
 
-      <!-- Author -->
-      <div class="flex items-center gap-3 text-sm text-slate-600 mb-6">
-        <div class="w-9 h-9 rounded-full bg-slate-200 flex items-center justify-center font-semibold">
-          {{ blog.author.username|slice:":1"|upper }}
-        </div>
-        <span>{{ blog.author.username }}</span>
-        <span>• {{ blog.created_at|date:"M d, Y" }}</span>
+        {% if user.is_authenticated and user != blog.author %}
+          <button
+            id="follow-btn"
+            data-url="{% url 'follow_toggle' blog.author.username %}"
+            class="px-4 py-1.5 rounded-lg text-sm font-semibold transition
+                   {% if is_following_author %}
+                     bg-slate-100 text-slate-700 hover:bg-red-50 hover:text-red-600 border border-slate-300
+                   {% else %}
+                     bg-blue-600 text-white hover:bg-blue-700
+                   {% endif %}">
+            {% if is_following_author %}Following{% else %}Follow{% endif %}
+          </button>
+        {% elif not user.is_authenticated %}
+          <a href="{% url 'login' %}?next={{ request.path }}"
+             class="px-4 py-1.5 rounded-lg text-sm font-semibold
+                    bg-blue-600 text-white hover:bg-blue-700 transition">
+            Follow
+          </a>
+        {% endif %}
       </div>
 
       <!-- Content -->
@@ -37,161 +57,266 @@
         {{ blog.content|linebreaks }}
       </div>
 
-      <!-- LIKE SECTION -->
+      <!-- Like -->
       <div class="mt-8 flex items-center gap-4">
-
         <form method="post" action="{% url 'blog_like' blog.slug %}">
           {% csrf_token %}
-
           {% if user.is_authenticated %}
             {% if user in blog.likes.all %}
-              <button
-                type="submit"
+              <button type="submit"
                 class="px-5 py-2 rounded-full bg-red-100 text-red-600 font-semibold hover:bg-red-200">
                 ❤️ Unlike
               </button>
             {% else %}
-              <button
-                type="submit"
+              <button type="submit"
                 class="px-5 py-2 rounded-full bg-blue-100 text-blue-600 font-semibold hover:bg-blue-200">
                 👍 Like
               </button>
             {% endif %}
           {% else %}
-            <a
-              href="{% url 'login' %}"
-              class="text-blue-600 font-semibold">
-              Login to like
-            </a>
+            <a href="{% url 'login' %}" class="text-blue-600 font-semibold">Login to like</a>
           {% endif %}
         </form>
-
-        <span class="text-slate-600">
-          ❤️ {{ blog.total_likes }} likes
-        </span>
-
+        <span class="text-slate-600">❤️ {{ blog.total_likes }} likes</span>
       </div>
+      <!-- Share with Friend -->
+{% if user.is_authenticated %}
+<div class="mt-4 flex items-center gap-3">
+  <button
+    onclick="toggleShareModal()"
+    class="flex items-center gap-2 px-5 py-2 rounded-full
+           bg-blue-100 text-blue-600 font-semibold hover:bg-blue-200 transition">
+    📤 Share with Friend
+  </button>
+</div>
 
-      <!-- EDIT / DELETE -->
+<!-- Share Modal -->
+<div id="share-modal"
+     class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+  <div class="bg-[#1a1a2e] rounded-2xl shadow-2xl w-full max-w-sm p-6
+              border border-gray-700">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-white font-bold text-lg">Share with a Friend</h3>
+      <button onclick="toggleShareModal()"
+              class="text-gray-400 hover:text-white text-xl">✕</button>
+    </div>
+
+    <!-- Blog preview -->
+    <div class="bg-[#0b141a] rounded-xl p-3 mb-4 border border-gray-700">
+      <p class="text-green-400 text-xs mb-1">📎 Blog</p>
+      <p class="text-white text-sm font-semibold">{{ blog.title }}</p>
+      <p class="text-gray-400 text-xs mt-1">by {{ blog.author.username }}</p>
+    </div>
+
+    <!-- Friends list -->
+    <p class="text-gray-400 text-xs mb-2">Send to a mutual friend:</p>
+    <div id="friends-list" class="space-y-2 max-h-48 overflow-y-auto mb-4">
+      <p class="text-gray-500 text-sm text-center py-4">Loading friends...</p>
+    </div>
+
+    <!-- Manual username input -->
+    <form method="post" action="{% url 'share_blog' blog.slug %}">
+      {% csrf_token %}
+      <div class="flex gap-2">
+        <input
+          type="text"
+          name="username"
+          id="share-username-input"
+          placeholder="Or type a username..."
+          class="flex-1 bg-[#202c33] text-white text-sm px-3 py-2
+                 rounded-lg outline-none placeholder-gray-500
+                 border border-gray-700 focus:border-green-500">
+        <button type="submit"
+          class="px-4 py-2 rounded-lg bg-green-600 text-white
+                 text-sm font-semibold hover:bg-green-700 transition">
+          Send
+        </button>
+      </div>
+    </form>
+
+  </div>
+</div>
+{% endif %}
+
+      <!-- Edit / Delete -->
       {% if user == blog.author %}
         <div class="mt-6 flex gap-4">
-          <a
-            href="{% url 'blog_update' blog.slug %}"
-            class="text-blue-600 font-semibold hover:underline">
-            ✏ Edit
-          </a>
-          <a
-            href="{% url 'blog_delete' blog.slug %}"
-            class="text-red-600 font-semibold hover:underline">
-            🗑 Delete
-          </a>
+          <a href="{% url 'blog_update' blog.slug %}"
+             class="text-blue-600 font-semibold hover:underline">✏ Edit</a>
+          <a href="{% url 'blog_delete' blog.slug %}"
+             class="text-red-600 font-semibold hover:underline">🗑 Delete</a>
         </div>
       {% endif %}
-
     </div>
   </article>
 
-  <!-- COMMENTS -->
+  <!-- Comments -->
   <section class="mt-12">
+    <h2 class="text-2xl font-bold text-slate-100 mb-6">💬 Comments</h2>
 
-    <h2 class="text-2xl font-bold text-slate-100 mb-6">
-      💬 Comments
-    </h2>
-
-    <!-- Comment List -->
     <div class="space-y-4">
       {% for comment in comments %}
         <div class="bg-slate-50 rounded-xl p-4 shadow">
           <div class="flex items-center gap-2 text-sm text-slate-600 mb-1">
-            <strong class="text-blue-900">{{ comment.author.username }}</strong>
+            <a href="{% url 'user_profile' comment.author.username %}"
+               class="font-bold text-blue-900 hover:text-blue-600 transition">
+              {{ comment.author.username }}
+            </a>
             <span>• {{ comment.created_at|date:"M d, Y H:i" }}</span>
           </div>
           <div class="prose prose-slate max-w-none text-slate-900">
-  {{ comment.text|linebreaks }}
-</div>
+            {{ comment.text|linebreaks }}
+          </div>
         </div>
       {% empty %}
-        <p class="text-slate-300">
-          No comments yet.
-        </p>
+        <p class="text-slate-300">No comments yet.</p>
       {% endfor %}
     </div>
 
-    <!-- ADD COMMENT -->
-   {% if user.is_authenticated %}
-  <!-- ADD COMMENT BUTTON -->
-  <button
-    id="showCommentBtn"
-    class="mt-8 px-6 py-2 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700">
-    Add a comment
-  </button>
-
-  <!-- COMMENT FORM (HIDDEN INITIALLY) -->
-  <div
-    id="commentBox"
-    class="mt-6 bg-slate-50 rounded-xl p-6 shadow hidden">
-
-    <h3 class="text-lg font-bold text-slate-900 mb-3">
-      Write your comment
-    </h3>
-
-    <form method="post">
-      {% csrf_token %}
-      {{ comment_form.text }}
-
-      <div class="mt-4 flex gap-3">
-        <button
-          type="submit"
-          class="px-6 py-2 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700">
-          Post Comment
-        </button>
-
-        <button
-          type="button"
-          id="cancelComment"
-          class="px-6 py-2 rounded-xl bg-slate-200 text-slate-700 hover:bg-slate-300">
-          Cancel
-        </button>
+    {% if user.is_authenticated %}
+      <button id="showCommentBtn"
+        class="mt-8 px-6 py-2 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700">
+        Add a comment
+      </button>
+      <div id="commentBox" class="mt-6 bg-slate-50 rounded-xl p-6 shadow hidden">
+        <h3 class="text-lg font-bold text-slate-900 mb-3">Write your comment</h3>
+        <form method="post">
+          {% csrf_token %}
+          {{ comment_form.text }}
+          <div class="mt-4 flex gap-3">
+            <button type="submit"
+              class="px-6 py-2 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700">
+              Post Comment
+            </button>
+            <button type="button" id="cancelComment"
+              class="px-6 py-2 rounded-xl bg-slate-200 text-slate-700 hover:bg-slate-300">
+              Cancel
+            </button>
+          </div>
+        </form>
       </div>
-    </form>
-  </div>
-{% else %}
-  <p class="mt-6 text-slate-300">
-    <a href="{% url 'login' %}" class="text-blue-400 font-semibold">
-      Login
-    </a> to comment.
-  </p>
-{% endif %}
-
-
+    {% else %}
+      <p class="mt-6 text-slate-300">
+        <a href="{% url 'login' %}" class="text-blue-400 font-semibold">Login</a> to comment.
+      </p>
+    {% endif %}
   </section>
-
 </div>
+
+{% csrf_token %}
+
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
-    const showBtn = document.getElementById('showCommentBtn');
-    const commentBox = document.getElementById('commentBox');
-    const cancelBtn = document.getElementById('cancelComment');
+// Comment toggle
+const showBtn = document.getElementById('showCommentBtn');
+const commentBox = document.getElementById('commentBox');
+const cancelBtn = document.getElementById('cancelComment');
 
-    if (showBtn && commentBox) {
-      showBtn.addEventListener('click', function () {
-        commentBox.classList.remove('hidden');
-        showBtn.classList.add('hidden');
+if (showBtn) {
+  showBtn.addEventListener('click', function () {
+    commentBox.classList.remove('hidden');
+    showBtn.classList.add('hidden');
+    commentBox.querySelector('textarea')?.focus();
+  });
+}
+if (cancelBtn) {
+  cancelBtn.addEventListener('click', function () {
+    commentBox.classList.add('hidden');
+    showBtn.classList.remove('hidden');
+  });
+}
 
-        const textarea = commentBox.querySelector('textarea');
-        if (textarea) textarea.focus();
+// Follow toggle
+const followBtn = document.getElementById('follow-btn');
+if (followBtn) {
+  followBtn.addEventListener('click', async function () {
+    const url = this.dataset.url;
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': csrfToken,
+          'X-Requested-With': 'XMLHttpRequest',
+        },
       });
-    }
 
-    if (cancelBtn) {
-      cancelBtn.addEventListener('click', function () {
-        commentBox.classList.add('hidden');
-        showBtn.classList.remove('hidden');
-      });
+      const data = await res.json();
+
+      if (data.is_following) {
+        this.textContent = 'Following';
+        this.className = 'px-4 py-1.5 rounded-lg text-sm font-semibold transition ' +
+          'bg-slate-100 text-slate-700 hover:bg-red-50 hover:text-red-600 border border-slate-300';
+      } else {
+        this.textContent = 'Follow';
+        this.className = 'px-4 py-1.5 rounded-lg text-sm font-semibold transition ' +
+          'bg-blue-600 text-white hover:bg-blue-700';
+      }
+    } catch (err) {
+      console.error('Follow failed:', err);
     }
   });
+}
+// Share modal
+function toggleShareModal() {
+  const modal = document.getElementById('share-modal');
+  modal.classList.toggle('hidden');
+  if (!modal.classList.contains('hidden')) {
+    loadFriends();
+  }
+}
+
+// Close on backdrop click
+document.getElementById('share-modal')?.addEventListener('click', function(e) {
+  if (e.target === this) toggleShareModal();
+});
+
+// Load mutual friends via AJAX
+async function loadFriends() {
+  const list = document.getElementById('friends-list');
+  try {
+    const res = await fetch('/api/friends/');
+    const data = await res.json();
+
+    if (data.friends.length === 0) {
+      list.innerHTML = `
+        <p class="text-gray-500 text-sm text-center py-4">
+          No mutual friends yet. Follow someone and they follow back!
+        </p>`;
+      return;
+    }
+
+    list.innerHTML = data.friends.map(friend => `
+      <form method="post" action="/{{ blog.slug }}/share/">
+        <input type="hidden" name="csrfmiddlewaretoken"
+               value="${getCookie('csrftoken')}">
+        <input type="hidden" name="username" value="${friend.username}">
+        <button type="submit"
+          class="w-full flex items-center gap-3 px-3 py-2 rounded-xl
+                 bg-[#202c33] hover:bg-[#2a3942] transition text-left">
+          <div class="w-9 h-9 rounded-full bg-blue-600 flex items-center
+                      justify-center text-white font-bold text-sm flex-shrink-0">
+            ${friend.username[0].toUpperCase()}
+          </div>
+          <span class="text-white text-sm">${friend.username}</span>
+          <span class="ml-auto text-green-400 text-xs">Send →</span>
+        </button>
+      </form>
+    `).join('');
+
+  } catch (err) {
+    list.innerHTML = `<p class="text-red-400 text-sm text-center">Failed to load friends.</p>`;
+  }
+}
+
+// Get CSRF cookie
+function getCookie(name) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+}
 </script>
-
-
 
 {% endblock %}

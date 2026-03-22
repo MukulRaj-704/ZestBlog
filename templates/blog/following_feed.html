@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Following Feed{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 py-8">
+
+  <div class="flex border-b border-gray-200 dark:border-gray-700 mb-6">
+    <a href="{% url 'blog_list' %}"
+       class="px-6 py-3 text-sm font-medium text-gray-500 dark:text-gray-400
+              hover:text-gray-700 dark:hover:text-gray-200 transition">
+      For You
+    </a>
+    <a href="{% url 'following_feed' %}"
+       class="px-6 py-3 text-sm font-semibold text-blue-600
+              border-b-2 border-blue-600">
+      Following
+    </a>
+  </div>
+
+  <div class="space-y-4">
+    {% for blog in blogs %}
+      <article class="bg-white dark:bg-[#1a1a2e] rounded-2xl border
+                      border-gray-200 dark:border-gray-800 overflow-hidden
+                      hover:border-blue-300 dark:hover:border-blue-700 transition p-5">
+
+        <div class="flex items-center gap-3 mb-3">
+          <a href="{% url 'user_profile' blog.author.username %}">
+            <div class="w-10 h-10 rounded-full overflow-hidden bg-blue-600
+                        flex items-center justify-center text-white font-bold text-sm">
+              {% if blog.author.profile.avatar %}
+                <img src="{{ blog.author.profile.avatar.url }}"
+                     class="w-10 h-10 object-cover">
+              {% else %}
+                {{ blog.author.username|first|upper }}
+              {% endif %}
+            </div>
+          </a>
+          <div>
+            <a href="{% url 'user_profile' blog.author.username %}"
+               class="text-sm font-semibold text-gray-900 dark:text-white
+                      hover:text-blue-600 transition">
+              {{ blog.author.username }}
+            </a>
+            <p class="text-xs text-gray-400">{{ blog.created_at|timesince }} ago</p>
+          </div>
+        </div>
+
+        {% if blog.cover_image %}
+          <a href="{% url 'blog_detail' blog.slug %}">
+            <img src="{{ blog.cover_image.url }}"
+                 class="w-full h-48 object-cover rounded-xl mb-3">
+          </a>
+        {% endif %}
+
+        <a href="{% url 'blog_detail' blog.slug %}">
+          <h2 class="text-lg font-bold text-gray-900 dark:text-white
+                     hover:text-blue-600 transition mb-2">
+            {{ blog.title }}
+          </h2>
+        </a>
+
+        <p class="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-4">
+          {{ blog.content|truncatewords:25 }}
+        </p>
+
+        <div class="flex items-center justify-between pt-3
+                    border-t border-gray-100 dark:border-gray-700">
+          <div class="flex gap-4 text-sm text-gray-400">
+            <span>🔥 {{ blog.likes.count }}</span>
+            <span>💬 {{ blog.comments.count }}</span>
+          </div>
+          <a href="{% url 'blog_detail' blog.slug %}"
+             class="text-blue-600 text-sm font-semibold hover:underline">
+            Read more →
+          </a>
+        </div>
+      </article>
+
+    {% empty %}
+      <div class="text-center py-16 text-gray-400">
+        <p class="text-5xl mb-4">👥</p>
+        <p class="text-lg font-semibold dark:text-white">No posts yet</p>
+        <p class="text-sm mt-1">Follow some users to see their blogs here.</p>
+        <a href="{% url 'blog_list' %}"
+           class="inline-block mt-4 px-5 py-2 rounded-full bg-blue-600
+                  text-white text-sm font-semibold hover:bg-blue-700 transition">
+          Discover people
+        </a>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

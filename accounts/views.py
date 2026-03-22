@@ -13,6 +13,7 @@ from django.contrib.auth.views import PasswordChangeView
 from django.utils import timezone
 from django.core.mail import send_mail
 from django.conf import settings
+from django.views import View
 
 
 User = get_user_model()
@@ -48,6 +49,8 @@ def logoutView(request):
     return redirect('login')
 
 
+from accounts.models import UserProfile
+
 class UserProfileView(ListView):
     model = Blog
     template_name = 'accounts/profile.html'
@@ -56,28 +59,58 @@ class UserProfileView(ListView):
 
     def get_queryset(self):
         self.profile_user = User.objects.get(username=self.kwargs['username'])
-        return Blog.objects.filter(author=self.profile_user,is_published=True).order_by('-created_at')
+        return Blog.objects.filter(
+            author=self.profile_user,
+            is_published=True
+        ).order_by('-created_at')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        profile, _ = UserProfile.objects.get_or_create(user=self.profile_user)
         context['profile_user'] = self.profile_user
+        context['profile'] = profile
         context['total_blogs'] = self.get_queryset().count()
+        context['is_following'] = False
+        if self.request.user.is_authenticated and self.request.user != self.profile_user:
+            try:
+                my_profile, _ = UserProfile.objects.get_or_create(user=self.request.user)
+                context['is_following'] = profile in my_profile.follows.all()
+            except Exception:
+                pass
         return context
 
+from .forms import RegisterForm, EditProfileForm, EditProfileExtrasForm
 
-class EditProfileView(LoginRequiredMixin, UpdateView):
-    form_class = EditProfileForm
+class EditProfileView(LoginRequiredMixin, View):
     template_name = 'accounts/edit_profile.html'
-    success_url = reverse_lazy('user_profile')
 
-    def get_object(self):
-        return self.request.user
+    def get(self, request):
+        user_form = EditProfileForm(instance=request.user)
+        profile, _ = UserProfile.objects.get_or_create(user=request.user)
+        profile_form = EditProfileExtrasForm(instance=profile)
+        return render(request, self.template_name, {
+            'user_form': user_form,
+            'profile_form': profile_form,
+        })
 
-    def get_success_url(self):
-        return reverse_lazy(
-            'user_profile',
-            kwargs={'username': self.request.user.username}
+    def post(self, request):
+        user_form = EditProfileForm(request.POST, instance=request.user)
+        profile, _ = UserProfile.objects.get_or_create(user=request.user)
+        profile_form = EditProfileExtrasForm(
+            request.POST,
+            request.FILES,   # ← FILES needed for avatar upload
+            instance=profile
         )
+
+        if user_form.is_valid() and profile_form.is_valid():
+            user_form.save()
+            profile_form.save()
+            return redirect('user_profile', username=request.user.username)
+
+        return render(request, self.template_name, {
+            'user_form': user_form,
+            'profile_form': profile_form,
+        })
 
 
 

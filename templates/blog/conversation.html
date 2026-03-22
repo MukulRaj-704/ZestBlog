@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+{% block title %}Chat with {{ other_user.username }}{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 py-8">
+
+  <!-- Header -->
+  <div class="flex items-center gap-3 mb-6 p-4 bg-white dark:bg-[#1a1a2e]
+              rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+    <a href="{% url 'inbox' %}"
+       class="text-gray-500 hover:text-primary transition text-lg">←</a>
+    <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center
+                justify-center text-primary font-bold text-lg">
+      {{ other_user.username|first|upper }}
+    </div>
+    <a href="{% url 'user_profile' other_user.username %}"
+       class="font-semibold text-gray-900 dark:text-white hover:text-primary transition">
+      {{ other_user.username }}
+    </a>
+    <span id="online-status"
+          class="ml-auto text-xs text-gray-400">
+    </span>
+  </div>
+
+  <!-- Messages Box -->
+  <div id="messages-box"
+       class="space-y-4 mb-4 h-[60vh] overflow-y-auto px-2">
+    {% for message in messages %}
+      <div class="flex {% if message.sender == request.user %}justify-end{% endif %}"
+           id="msg-{{ message.id }}">
+        <div class="max-w-xs lg:max-w-md px-4 py-3 rounded-2xl shadow-sm
+                    {% if message.sender == request.user %}
+                      bg-blue-600 text-white rounded-tr-sm
+                    {% else %}
+                      bg-white dark:bg-gray-800 text-gray-900
+                      dark:text-white rounded-tl-sm border
+                      border-gray-100 dark:border-gray-700
+                    {% endif %}">
+          {% if message.shared_blog %}
+            <a href="{% url 'blog_detail' message.shared_blog.slug %}"
+               class="block mb-2 p-3 rounded-xl bg-white/20 border border-white/30">
+              <p class="text-xs font-semibold opacity-75 mb-1">📎 Shared Blog</p>
+              <p class="text-sm font-bold">{{ message.shared_blog.title }}</p>
+            </a>
+          {% endif %}
+          <p class="text-sm">{{ message.body }}</p>
+          <p class="text-xs opacity-60 mt-1 text-right">
+            {{ message.created_at|date:"H:i" }}
+          </p>
+        </div>
+      </div>
+    {% empty %}
+      <div class="flex items-center justify-center h-full">
+        <p class="text-gray-400">No messages yet. Say hello! 👋</p>
+      </div>
+    {% endfor %}
+  </div>
+
+  <!-- Typing Indicator -->
+  <div id="typing-indicator"
+       class="hidden text-xs text-gray-400 px-2 mb-2">
+    {{ other_user.username }} is typing...
+  </div>
+
+  <!-- Message Input -->
+  <div class="flex gap-3 bg-white dark:bg-[#1a1a2e] p-3 rounded-xl
+              border border-gray-200 dark:border-gray-700 shadow-sm">
+    <input
+      type="text"
+      id="message-input"
+      placeholder="Type a message..."
+      autocomplete="off"
+      class="flex-1 px-4 py-2 rounded-xl border border-gray-200
+             dark:border-gray-700 bg-gray-50 dark:bg-gray-800
+             text-gray-900 dark:text-white focus:outline-none
+             focus:ring-2 focus:ring-primary text-sm">
+    <button id="send-btn"
+      class="px-6 py-2 rounded-xl bg-blue-600 text-white
+             font-semibold hover:bg-blue-700 transition text-sm">
+      Send
+    </button>
+  </div>
+</div>
+
+<script>
+  const conversationId = "{{ conversation.id }}";
+  const currentUser = "{{ request.user.username }}";
+  const currentUserId = {{ request.user.id }};
+  const wsUrl = `ws://${window.location.host}/ws/chat/${conversationId}/`;
+
+  const messagesBox = document.getElementById('messages-box');
+  const messageInput = document.getElementById('message-input');
+  const sendBtn = document.getElementById('send-btn');
+  const typingIndicator = document.getElementById('typing-indicator');
+
+  // Connect WebSocket
+  const socket = new WebSocket(wsUrl);
+
+  socket.onopen = function() {
+    console.log('WebSocket connected');
+  };
+
+  socket.onclose = function() {
+    console.log('WebSocket disconnected');
+  };
+
+  socket.onerror = function(err) {
+    console.error('WebSocket error:', err);
+  };
+
+  // Receive message
+  socket.onmessage = function(e) {
+    const data = JSON.parse(e.data);
+
+    if (data.type === 'typing') {
+      if (data.sender !== currentUser) {
+        typingIndicator.classList.remove('hidden');
+        clearTimeout(window.typingTimeout);
+        window.typingTimeout = setTimeout(() => {
+          typingIndicator.classList.add('hidden');
+        }, 2000);
+      }
+      return;
+    }
+
+    appendMessage(data);
+    scrollToBottom();
+  };
+
+  // Send message
+  function sendMessage() {
+    const message = messageInput.value.trim();
+    if (!message || socket.readyState !== WebSocket.OPEN) return;
+
+    socket.send(JSON.stringify({ message: message }));
+    messageInput.value = '';
+  }
+
+  sendBtn.addEventListener('click', sendMessage);
+
+  messageInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+
+    // Send typing indicator
+    if (socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify({ type: 'typing', sender: currentUser }));
+    }
+  });
+
+  // Append new message to DOM
+  function appendMessage(data) {
+    const isOwn = data.sender_id === currentUserId;
+    const div = document.createElement('div');
+    div.id = `msg-${data.message_id}`;
+    div.className = `flex ${isOwn ? 'justify-end' : ''}`;
+    div.innerHTML = `
+      <div class="max-w-xs lg:max-w-md px-4 py-3 rounded-2xl shadow-sm
+                  ${isOwn
+                    ? 'bg-blue-600 text-white rounded-tr-sm'
+                    : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-tl-sm border border-gray-100 dark:border-gray-700'
+                  }">
+        <p class="text-sm">${escapeHtml(data.message)}</p>
+        <p class="text-xs opacity-60 mt-1 text-right">${data.timestamp}</p>
+      </div>
+    `;
+    messagesBox.appendChild(div);
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.appendChild(document.createTextNode(text));
+    return div.innerHTML;
+  }
+
+  function scrollToBottom() {
+    messagesBox.scrollTop = messagesBox.scrollHeight;
+  }
+
+  // Auto scroll on load
+  scrollToBottom();
+</script>
+
+{% endblock %}

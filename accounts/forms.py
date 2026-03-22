@@ -1,6 +1,10 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from .models import User
+from django.contrib.auth import get_user_model
+from .models import UserProfile
+
+User = get_user_model()
+
 
 class RegisterForm(UserCreationForm):
     class Meta:
@@ -8,15 +12,11 @@ class RegisterForm(UserCreationForm):
         fields = ['username', 'email', 'password1', 'password2']
 
 
-from django import forms
-from django.contrib.auth import get_user_model
-
-User = get_user_model()
-
 class EditProfileForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ['username', 'email']
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field in self.fields.values():
@@ -30,3 +30,26 @@ class EditProfileForm(forms.ModelForm):
                     "focus:ring-2 focus:ring-primary focus:outline-none"
                 )
             })
+
+
+class EditProfileExtrasForm(forms.ModelForm):
+    """Handles avatar and bio — stored on UserProfile"""
+    class Meta:
+        model = UserProfile
+        fields = ['avatar', 'bio']
+        widgets = {
+            'avatar': forms.ClearableFileInput(attrs={
+                'class': 'w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-800 '
+                         'border border-gray-300 dark:border-gray-700 '
+                         'text-gray-900 dark:text-white',
+                'accept': 'image/*'
+            }),
+            'bio': forms.Textarea(attrs={
+                'class': 'w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-800 '
+                         'border border-gray-300 dark:border-gray-700 '
+                         'text-gray-900 dark:text-white '
+                         'focus:ring-2 focus:ring-primary focus:outline-none',
+                'rows': 3,
+                'placeholder': 'Write something about yourself...'
+            }),
+        }

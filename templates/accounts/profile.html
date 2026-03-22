@@ -1,11 +1,7 @@
 {% extends 'base.html' %}
-
-{% block title %}
-{{ profile_user.username }}'s Profile
-{% endblock %}
+{% block title %}{{ profile_user.username }}'s Profile{% endblock %}
 
 {% block content %}
-
 <div class="max-w-4xl mx-auto px-4 py-8">
 
   <!-- Profile Card -->
@@ -13,13 +9,15 @@
 
     <!-- Header -->
     <div class="p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b dark:border-gray-700">
-
       <div class="flex items-center gap-4">
-        <!-- Avatar -->
-        <div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary text-2xl font-bold">
-          {{ profile_user.username|first|upper }}
+        <div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary text-2xl font-bold flex-shrink-0">
+          {% if profile.avatar %}
+            <img src="{{ profile.avatar.url }}" alt="{{ profile_user.username }}"
+                 class="w-16 h-16 rounded-full object-cover">
+          {% else %}
+            {{ profile_user.username|first|upper }}
+          {% endif %}
         </div>
-
         <div>
           <h2 class="text-xl font-bold text-gray-900 dark:text-white">
             {{ profile_user.username }}
@@ -27,41 +25,91 @@
           <p class="text-sm text-gray-500 dark:text-gray-400">
             {{ profile_user.email }}
           </p>
+          {% if profile.bio %}
+            <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">
+              {{ profile.bio }}
+            </p>
+          {% endif %}
         </div>
       </div>
 
-      {% if user == profile_user %}
-      <div class="flex gap-2">
-        <a href="{% url 'edit_profile' %}"
-           class="px-4 py-2 rounded-lg bg-primary text-white text-sm font-semibold hover:bg-blue-700 transition">
-          Edit Profile
-        </a>
-        <a href="{% url 'password_change' %}"
-           class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 text-sm font-semibold hover:bg-gray-100 dark:hover:bg-gray-800 transition">
-          Change Password
-        </a>
+      <!-- Buttons -->
+      <div class="flex gap-2 flex-shrink-0">
+        {% if user == profile_user %}
+          <a href="{% url 'edit_profile' %}"
+             class="px-4 py-2 rounded-lg bg-primary text-white text-sm font-semibold hover:bg-blue-700 transition">
+            Edit Profile
+          </a>
+          <a href="{% url 'password_change' %}"
+             class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 text-sm font-semibold hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+            Change Password
+          </a>
+
+        {% elif user.is_authenticated %}
+          <!-- Follow Button -->
+          <button
+            id="follow-btn"
+            data-url="{% url 'follow_toggle' profile_user.username %}"
+            class="px-5 py-2 rounded-lg text-sm font-semibold transition
+                   {% if is_following %}
+                     bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200
+                     hover:bg-red-50 hover:text-red-600 border border-gray-300 dark:border-gray-600
+                   {% else %}
+                     bg-primary text-white hover:bg-blue-700
+                   {% endif %}">
+            {% if is_following %}Following{% else %}Follow{% endif %}
+          </button>
+
+          <!-- Message Button -->
+          <a href="{% url 'start_conversation' profile_user.username %}"
+             class="px-5 py-2 rounded-lg text-sm font-semibold transition
+                    bg-green-500 text-white hover:bg-green-600">
+            💬 Message
+          </a>
+
+        {% else %}
+          <a href="{% url 'login' %}"
+             class="px-5 py-2 rounded-lg bg-primary text-white text-sm font-semibold hover:bg-blue-700 transition">
+            Follow
+          </a>
+        {% endif %}
       </div>
-      {% endif %}
     </div>
 
     <!-- Stats -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 p-6 text-center">
+    <div class="grid grid-cols-3 gap-4 p-6 text-center">
       <div class="rounded-lg bg-gray-50 dark:bg-gray-800 p-4">
-        <p class="text-sm text-gray-500">Total Blogs</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400">Blogs</p>
         <p class="text-2xl font-bold text-gray-900 dark:text-white">
           {{ total_blogs }}
         </p>
       </div>
-    </div>
 
+      <div class="rounded-lg bg-gray-50 dark:bg-gray-800 p-4 cursor-pointer
+                  hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+           onclick="toggleModal('followers-modal')">
+        <p class="text-sm text-gray-500 dark:text-gray-400">Followers</p>
+        <p id="followers-count" class="text-2xl font-bold text-gray-900 dark:text-white">
+          {{ profile.followers_count }}
+        </p>
+      </div>
+
+      <div class="rounded-lg bg-gray-50 dark:bg-gray-800 p-4 cursor-pointer
+                  hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+           onclick="toggleModal('following-modal')">
+        <p class="text-sm text-gray-500 dark:text-gray-400">Following</p>
+        <p class="text-2xl font-bold text-gray-900 dark:text-white">
+          {{ profile.following_count }}
+        </p>
+      </div>
+    </div>
   </div>
 
-  <!-- Blogs Section -->
+  <!-- Blogs -->
   <div class="mt-10">
     <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">
       Blogs by {{ profile_user.username }}
     </h3>
-
     <div class="space-y-4">
       {% for blog in blogs %}
         <div class="p-5 bg-white dark:bg-[#1a1a2e] rounded-xl shadow border border-gray-200 dark:border-gray-800">
@@ -70,13 +118,11 @@
             {{ blog.title }}
           </a>
           <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            Published on {{ blog.created_at|date:"M d, Y" }}
+            {{ blog.created_at|date:"M d, Y" }}
           </p>
         </div>
       {% empty %}
-        <p class="text-gray-500 dark:text-gray-400">
-          No blogs yet.
-        </p>
+        <p class="text-gray-500 dark:text-gray-400">No blogs yet.</p>
       {% endfor %}
     </div>
   </div>
@@ -89,25 +135,127 @@
          class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 text-sm hover:bg-gray-100 dark:hover:bg-gray-800">
         ← Previous
       </a>
-    {% else %}
-      <span></span>
-    {% endif %}
-
+    {% else %}<span></span>{% endif %}
     <span class="text-sm text-gray-500">
       Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
     </span>
-
     {% if page_obj.has_next %}
       <a href="?page={{ page_obj.next_page_number }}"
          class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 text-sm hover:bg-gray-100 dark:hover:bg-gray-800">
         Next →
       </a>
-    {% else %}
-      <span></span>
-    {% endif %}
+    {% else %}<span></span>{% endif %}
   </div>
   {% endif %}
 
 </div>
+
+<!-- Followers Modal -->
+<div id="followers-modal"
+     class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+  <div class="bg-white dark:bg-[#1a1a2e] rounded-xl shadow-xl w-full max-w-sm p-6
+              border border-gray-200 dark:border-gray-700">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white">Followers</h3>
+      <button onclick="toggleModal('followers-modal')"
+              class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xl">✕</button>
+    </div>
+    <ul class="space-y-3 max-h-72 overflow-y-auto">
+      {% for follower in profile.followed_by.all %}
+        <li class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center
+                      text-primary text-sm font-bold flex-shrink-0">
+            {{ follower.user.username|first|upper }}
+          </div>
+          <a href="{% url 'user_profile' follower.user.username %}"
+             class="text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-primary">
+            {{ follower.user.username }}
+          </a>
+        </li>
+      {% empty %}
+        <li class="text-sm text-gray-500 dark:text-gray-400">No followers yet.</li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+
+<!-- Following Modal -->
+<div id="following-modal"
+     class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+  <div class="bg-white dark:bg-[#1a1a2e] rounded-xl shadow-xl w-full max-w-sm p-6
+              border border-gray-200 dark:border-gray-700">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white">Following</h3>
+      <button onclick="toggleModal('following-modal')"
+              class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xl">✕</button>
+    </div>
+    <ul class="space-y-3 max-h-72 overflow-y-auto">
+      {% for followed in profile.follows.all %}
+        <li class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center
+                      text-primary text-sm font-bold flex-shrink-0">
+            {{ followed.user.username|first|upper }}
+          </div>
+          <a href="{% url 'user_profile' followed.user.username %}"
+             class="text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-primary">
+            {{ followed.user.username }}
+          </a>
+        </li>
+      {% empty %}
+        <li class="text-sm text-gray-500 dark:text-gray-400">Not following anyone yet.</li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+
+{% csrf_token %}
+
+<script>
+function toggleModal(id) {
+  document.getElementById(id).classList.toggle('hidden');
+}
+
+document.querySelectorAll('[id$="-modal"]').forEach(modal => {
+  modal.addEventListener('click', function(e) {
+    if (e.target === this) this.classList.add('hidden');
+  });
+});
+
+const followBtn = document.getElementById('follow-btn');
+if (followBtn) {
+  followBtn.addEventListener('click', async function () {
+    const url = this.dataset.url;
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': csrfToken,
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+      });
+
+      const data = await res.json();
+
+      if (data.is_following) {
+        this.textContent = 'Following';
+        this.className = 'px-5 py-2 rounded-lg text-sm font-semibold transition ' +
+          'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 ' +
+          'hover:bg-red-50 hover:text-red-600 border border-gray-300 dark:border-gray-600';
+      } else {
+        this.textContent = 'Follow';
+        this.className = 'px-5 py-2 rounded-lg text-sm font-semibold transition ' +
+          'bg-primary text-white hover:bg-blue-700';
+      }
+
+      document.getElementById('followers-count').textContent = data.followers_count;
+
+    } catch (err) {
+      console.error('Follow failed:', err);
+    }
+  });
+}
+</script>
 
 {% endblock %}
