@@ -4,16 +4,13 @@ import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Secret key — uses environment variable on Railway, falls back to local key
 SECRET_KEY = os.environ.get(
     'SECRET_KEY',
     'django-insecure-za^tf8)bnb=wk5=^e80#-=s_5_*8bgbh-j@!(g72_s^tbnme!q'
 )
 
-# Debug — False on Railway, True locally
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
-# Hosts
 ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
@@ -23,18 +20,17 @@ INSTALLED_APPS = [
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
-    'cloudinary_storage', 
-    'cloudinary',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'cloudinary_storage',   # ← AFTER staticfiles
+    'cloudinary',           # ← AFTER cloudinary_storage
     'accounts',
     'blog',
-    
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # ← whitenoise for static files
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -64,7 +60,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# Database — PostgreSQL on Railway, SQLite locally
 DATABASE_URL = os.environ.get('DATABASE_URL')
 if DATABASE_URL:
     DATABASES = {
@@ -95,14 +90,10 @@ STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# Media files
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
-
 # Auth
 AUTH_USER_MODEL = 'accounts.User'
 
-# Channels + Redis — Redis on Railway, InMemory locally
+# Channels
 ASGI_APPLICATION = 'config.asgi.application'
 
 REDIS_URL = os.environ.get('REDIS_URL')
@@ -124,26 +115,19 @@ else:
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# CSRF fix for Railway
+# CSRF
 CSRF_TRUSTED_ORIGINS = [
     'https://web-production-41478.up.railway.app',
     'https://*.railway.app',
 ]
-
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
 
-
-# Cloudinary
+# Cloudinary — media storage on production
 CLOUDINARY_URL = os.environ.get('CLOUDINARY_URL')
 if CLOUDINARY_URL:
-    import cloudinary
-    cloudinary.config(
-        cloudinary_url=CLOUDINARY_URL
-    )
     DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+    MEDIA_URL = 'https://res.cloudinary.com/'
+else:
     MEDIA_URL = '/media/'
-# Debug cloudinary
-import sys
-print(f"CLOUDINARY_URL exists: {bool(os.environ.get('CLOUDINARY_URL'))}", file=sys.stderr)
-print(f"DEFAULT_FILE_STORAGE: {DEFAULT_FILE_STORAGE if 'DEFAULT_FILE_STORAGE' in dir() else 'not set'}", file=sys.stderr)
+    MEDIA_ROOT = BASE_DIR / 'media'
