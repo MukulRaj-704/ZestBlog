@@ -126,13 +126,18 @@ SESSION_COOKIE_SECURE = True
 # Cloudinary — media storage on production
 # Cloudinary
 # Cloudinary
+# Cloudinary
 CLOUDINARY_URL = os.environ.get('CLOUDINARY_URL')
+print(f"DEBUG CLOUDINARY_URL: {CLOUDINARY_URL[:30] if CLOUDINARY_URL else 'NOT FOUND'}", flush=True)
+
 if CLOUDINARY_URL:
     DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
     CLOUDINARY_STORAGE = {
         'CLOUDINARY_URL': CLOUDINARY_URL
     }
     MEDIA_URL = '/media/'
+    print(f"DEBUG DEFAULT_FILE_STORAGE SET TO: {DEFAULT_FILE_STORAGE}", flush=True)
 else:
     MEDIA_URL = '/media/'
     MEDIA_ROOT = BASE_DIR / 'media'
+    print("DEBUG: Using local storage", flush=True)
