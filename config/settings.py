@@ -133,6 +133,16 @@ CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
 
 
+# Cloudinary
 CLOUDINARY_URL = os.environ.get('CLOUDINARY_URL')
 if CLOUDINARY_URL:
+    import cloudinary
+    cloudinary.config(
+        cloudinary_url=CLOUDINARY_URL
+    )
     DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+    MEDIA_URL = '/media/'
+# Debug cloudinary
+import sys
+print(f"CLOUDINARY_URL exists: {bool(os.environ.get('CLOUDINARY_URL'))}", file=sys.stderr)
+print(f"DEFAULT_FILE_STORAGE: {DEFAULT_FILE_STORAGE if 'DEFAULT_FILE_STORAGE' in dir() else 'not set'}", file=sys.stderr)
