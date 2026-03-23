@@ -96,22 +96,24 @@ class EditProfileView(LoginRequiredMixin, View):
     def post(self, request):
         user_form = EditProfileForm(request.POST, instance=request.user)
         profile, _ = UserProfile.objects.get_or_create(user=request.user)
-        profile_form = EditProfileExtrasForm(
-            request.POST,
-            request.FILES,   # ← FILES needed for avatar upload
-            instance=profile
-        )
+        profile_form = EditProfileExtrasForm(request.POST, instance=profile)
 
         if user_form.is_valid() and profile_form.is_valid():
             user_form.save()
-            profile_form.save()
+            profile_instance = profile_form.save(commit=False)
+
+            # ✅ Save Cloudinary URL directly
+            avatar_url = request.POST.get('avatar_url')
+            if avatar_url:
+                profile_instance.avatar = avatar_url
+        
+            profile_instance.save()
             return redirect('user_profile', username=request.user.username)
 
         return render(request, self.template_name, {
             'user_form': user_form,
             'profile_form': profile_form,
         })
-
 
 
 class CustomPasswordChangeView(LoginRequiredMixin, PasswordChangeView):

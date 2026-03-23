@@ -12,7 +12,7 @@
       <div class="flex items-center gap-4">
         <div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary text-2xl font-bold flex-shrink-0">
           {% if profile.avatar %}
-            <img src="{{ profile.avatar.url }}" alt="{{ profile_user.username }}"
+            <img src="{{ profile.avatar }}" alt="{{ profile_user.username }}"
                  class="w-16 h-16 rounded-full object-cover">
           {% else %}
             {{ profile_user.username|first|upper }}

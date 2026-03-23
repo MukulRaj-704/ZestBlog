@@ -356,7 +356,6 @@ def get_mutual_friends(request):
 
 
 @login_required
-@login_required
 def send_file(request, conversation_id):
     if request.method != 'POST':
         return redirect('conversation_detail', conversation_id=conversation_id)
@@ -371,16 +370,25 @@ def send_file(request, conversation_id):
     if not uploaded_file:
         return JsonResponse({'success': False, 'error': 'No file'})
 
+    # ✅ Upload directly to Cloudinary
+    import cloudinary.uploader
     file_name = uploaded_file.name
     extension = file_name.split('.')[-1].lower()
     image_extensions = ['jpg', 'jpeg', 'png', 'gif', 'webp']
     file_type = 'image' if extension in image_extensions else 'document'
 
+    upload_result = cloudinary.uploader.upload(
+        uploaded_file,
+        folder='chat_files',
+        resource_type='auto'  # handles both images and documents
+    )
+    file_url = upload_result.get('secure_url', '')
+
     message = Message.objects.create(
         conversation=conversation,
         sender=request.user,
         body='',
-        file=uploaded_file,
+        file=file_url,        # ✅ store URL string
         file_name=file_name,
         file_type=file_type
     )
@@ -389,7 +397,7 @@ def send_file(request, conversation_id):
         return JsonResponse({
             'success': True,
             'message_id': message.id,
-            'file_url': message.file.url,  # Cloudinary returns full URL
+            'file_url': message.file,   # ✅ already a URL string now
             'file_name': message.file_name,
             'file_type': message.file_type,
             'sender': request.user.username,

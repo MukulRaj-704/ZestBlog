@@ -6,7 +6,7 @@ class Blog(models.Model):
     title = models.CharField(max_length=200)
     slug = models.SlugField(unique=True)
     content = models.TextField()
-    cover_image = models.ImageField(upload_to='blog_images/', blank=True, null=True)
+    cover_image = models.URLField(blank=True, null=True)  # ✅ URLField
     author = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -45,7 +45,6 @@ class Comment(models.Model):
         return f"Comment by {self.author}"
 
 
-# ── Conversation is outside Comment — correct ──────────────
 class Conversation(models.Model):
     participants = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
@@ -71,7 +70,7 @@ class Message(models.Model):
         on_delete=models.CASCADE,
         related_name='sent_messages'
     )
-    body = models.TextField(blank=True)  # ← make blank=True for file-only messages
+    body = models.TextField(blank=True)
     shared_blog = models.ForeignKey(
         Blog,
         on_delete=models.SET_NULL,
@@ -79,14 +78,9 @@ class Message(models.Model):
         blank=True,
         related_name='shared_in_messages'
     )
-    # File sharing
-    file = models.FileField(
-        upload_to='chat_files/%Y/%m/%d/',
-        null=True,
-        blank=True
-    )
+    file = models.URLField(blank=True, null=True)  # ✅ URLField
     file_name = models.CharField(max_length=255, blank=True)
-    file_type = models.CharField(max_length=50, blank=True)  # image, document, etc
+    file_type = models.CharField(max_length=50, blank=True)
     is_read = models.BooleanField(default=False)
     deleted_by_sender = models.BooleanField(default=False)
     deleted_by_receiver = models.BooleanField(default=False)

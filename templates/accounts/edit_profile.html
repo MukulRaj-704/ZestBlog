@@ -6,14 +6,9 @@
   <div class="bg-white dark:bg-[#1a1a2e] rounded-xl shadow-lg border
               border-gray-200 dark:border-gray-800 overflow-hidden">
 
-    <!-- Header -->
     <div class="p-6 border-b dark:border-gray-700">
-      <h2 class="text-xl font-bold text-gray-900 dark:text-white">
-        Edit Profile
-      </h2>
-      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-        Update your personal information
-      </p>
+      <h2 class="text-xl font-bold text-gray-900 dark:text-white">Edit Profile</h2>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Update your personal information</p>
     </div>
 
     <!-- Avatar Preview -->
@@ -21,47 +16,35 @@
       <div class="w-20 h-20 rounded-full overflow-hidden bg-primary/10
                   flex items-center justify-center text-primary text-3xl font-bold flex-shrink-0">
         {% if request.user.profile.avatar %}
-          <img src="{{ request.user.profile.avatar.url }}"
+          <img src="{{ request.user.profile.avatar }}"  {# ✅ removed .url #}
                id="avatar-preview"
                class="w-20 h-20 object-cover rounded-full">
         {% else %}
-          <img id="avatar-preview"
-               class="w-20 h-20 object-cover rounded-full hidden">
-          <span id="avatar-initials">
-            {{ request.user.username|first|upper }}
-          </span>
+          <img id="avatar-preview" class="w-20 h-20 object-cover rounded-full hidden">
+          <span id="avatar-initials">{{ request.user.username|first|upper }}</span>
         {% endif %}
       </div>
       <div>
-        <p class="text-sm font-semibold text-gray-900 dark:text-white">
-          Profile Photo
-        </p>
-        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-          JPG, PNG or GIF. Max 5MB.
-        </p>
+        <button type="button" id="upload-btn"
+          class="px-4 py-2 rounded-lg bg-primary text-white text-sm font-semibold hover:bg-blue-700 transition">
+          📷 Choose Photo
+        </button>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">JPG, PNG or GIF. Max 5MB.</p>
+        <p id="upload-status" class="text-xs text-green-500 mt-1 hidden">✅ Photo uploaded!</p>
       </div>
     </div>
 
     <!-- Form -->
-    <form method="post" enctype="multipart/form-data" class="p-6 space-y-5">
+    <form method="post" class="p-6 space-y-5">
       {% csrf_token %}
 
-      <!-- Avatar -->
-      <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Profile Picture
-        </label>
-        {{ profile_form.avatar }}
-        {% if profile_form.avatar.errors %}
-          <p class="text-xs text-red-600 mt-1">{{ profile_form.avatar.errors.0 }}</p>
-        {% endif %}
-      </div>
+      <!-- Hidden field to store Cloudinary URL -->
+      <input type="hidden" name="avatar_url" id="avatar_url"
+             value="{{ request.user.profile.avatar|default:'' }}">  {# ✅ removed .url #}
 
       <!-- Bio -->
       <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Bio
-        </label>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Bio</label>
         {{ profile_form.bio }}
         {% if profile_form.bio.errors %}
           <p class="text-xs text-red-600 mt-1">{{ profile_form.bio.errors.0 }}</p>
@@ -72,9 +55,7 @@
 
       <!-- Username -->
       <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Username
-        </label>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Username</label>
         {{ user_form.username }}
         {% if user_form.username.errors %}
           <p class="text-xs text-red-600 mt-1">{{ user_form.username.errors.0 }}</p>
@@ -83,9 +64,7 @@
 
       <!-- Email -->
       <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Email
-        </label>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
         {{ user_form.email }}
         {% if user_form.email.errors %}
           <p class="text-xs text-red-600 mt-1">{{ user_form.email.errors.0 }}</p>
@@ -106,41 +85,32 @@
           Save Changes
         </button>
       </div>
-
     </form>
   </div>
 </div>
 
-<script>
-  // Live avatar preview
-  document.querySelector('input[type="file"]')?.addEventListener('change', function() {
-    const file = this.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      const preview = document.getElementById('avatar-preview');
-      const initials = document.getElementById('avatar-initials');
-      preview.src = e.target.result;
-      preview.classList.remove('hidden');
-      if (initials) initials.classList.add('hidden');
-    };
-    reader.readAsDataURL(file);
-  });
-</script>
-<!-- Add in base.html or edit_profile.html -->
 <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
-
-<button type="button" id="upload-btn">Upload Photo</button>
-<input type="hidden" name="avatar_url" id="avatar_url">
-
 <script>
 var widget = cloudinary.createUploadWidget({
-    cloudName: 'dz0osju9d',       
-    uploadPreset: 'your_preset',  // create this in Cloudinary dashboard
+    cloudName: 'dz0osju9d',
+    uploadPreset: 'FP',  // ✅ updated preset name
     folder: 'avatars',
+    cropping: true,
+    croppingAspectRatio: 1,
+    maxFileSize: 5000000,
 }, function(error, result) {
+    if (error) {
+        console.error('Upload error:', error);
+        return;
+    }
     if (result.event === 'success') {
-        document.getElementById('avatar_url').value = result.info.secure_url;
+        const url = result.info.secure_url;
+        document.getElementById('avatar_url').value = url;
+        document.getElementById('avatar-preview').src = url;
+        document.getElementById('avatar-preview').classList.remove('hidden');
+        const initials = document.getElementById('avatar-initials');
+        if (initials) initials.classList.add('hidden');
+        document.getElementById('upload-status').classList.remove('hidden');
     }
 });
 
