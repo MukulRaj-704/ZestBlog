@@ -126,19 +126,42 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 # Cloudinary — media storage on production
 import cloudinary
-import cloudinary.uploader
-import cloudinary.api
 
 CLOUDINARY_URL = os.environ.get('CLOUDINARY_URL')
 
 if CLOUDINARY_URL:
-    cloudinary.config(secure=True)
-    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+    # ✅ Parse and pass credentials explicitly
+    import urllib.parse
+    parsed = urllib.parse.urlparse(CLOUDINARY_URL)
+    
     CLOUDINARY_STORAGE = {
-        'CLOUDINARY_URL': CLOUDINARY_URL
+        'CLOUD_NAME': parsed.hostname,
+        'API_KEY': parsed.username,
+        'API_SECRET': parsed.password,
     }
+    
+    cloudinary.config(
+        cloud_name=parsed.hostname,
+        api_key=parsed.username,
+        api_secret=parsed.password,
+        secure=True
+    )
+    
+    
+    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+    MEDIA_URL = '/media/'  # Still needed by Django internally
+
 else:
     # Local fallback
+    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
     MEDIA_URL = '/media/'
     MEDIA_ROOT = BASE_DIR / 'media'
-    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+    
+import sys
+print("=== CLOUDINARY DEBUG ===", file=sys.stderr)
+print(f"CLOUDINARY_URL set: {bool(CLOUDINARY_URL)}", file=sys.stderr)
+print(f"DEFAULT_FILE_STORAGE: {DEFAULT_FILE_STORAGE}", file=sys.stderr)
+if CLOUDINARY_URL:
+    print(f"CLOUD_NAME: {parsed.hostname}", file=sys.stderr)
+    print(f"API_KEY: {parsed.username}", file=sys.stderr)
+print("========================", file=sys.stderr)
