@@ -127,5 +127,23 @@
     reader.readAsDataURL(file);
   });
 </script>
+<!-- Add in base.html or edit_profile.html -->
+<script src="https://upload-widget.cloudinary.com/global/all.js"></script>
 
+<button type="button" id="upload-btn">Upload Photo</button>
+<input type="hidden" name="avatar_url" id="avatar_url">
+
+<script>
+var widget = cloudinary.createUploadWidget({
+    cloudName: 'dz0osju9d',       
+    uploadPreset: 'your_preset',  // create this in Cloudinary dashboard
+    folder: 'avatars',
+}, function(error, result) {
+    if (result.event === 'success') {
+        document.getElementById('avatar_url').value = result.info.secure_url;
+    }
+});
+
+document.getElementById('upload-btn').addEventListener('click', () => widget.open());
+</script>
 {% endblock %}
