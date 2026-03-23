@@ -122,20 +122,23 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
-
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 # Cloudinary — media storage on production
-# Cloudinary
-# Cloudinary
-# Cloudinary
 import cloudinary
+import cloudinary.uploader
+import cloudinary.api
 
 CLOUDINARY_URL = os.environ.get('CLOUDINARY_URL')
 
-if not CLOUDINARY_URL:
-    raise Exception("❌ CLOUDINARY_URL is not set in Railway environment variables")
-
-# Configure Cloudinary
-cloudinary.config(secure=True)
-
-# Force Cloudinary storage (NO fallback)
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+if CLOUDINARY_URL:
+    cloudinary.config(secure=True)
+    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+    CLOUDINARY_STORAGE = {
+        'CLOUDINARY_URL': CLOUDINARY_URL
+    }
+else:
+    # Local fallback
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = BASE_DIR / 'media'
+    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
