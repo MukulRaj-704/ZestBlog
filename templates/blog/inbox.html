@@ -39,7 +39,7 @@
           <!-- Avatar -->
           <div class="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
             {% if convo.other_user.profile.avatar %}
-              <img src="{{ convo.other_user.profile.avatar.url }}"
+              <img src="{{ convo.other_user.profile.avatar }}"
                    class="w-12 h-12 object-cover">
             {% else %}
               <div class="w-12 h-12 rounded-full bg-blue-600 flex items-center
@@ -117,7 +117,7 @@
       <div class="px-4 py-3 bg-[#202c33] flex items-center gap-3 border-b border-gray-800">
         <div class="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
           {% if other_user.profile.avatar %}
-            <img src="{{ other_user.profile.avatar.url }}"
+            <img src="{{ other_user.profile.avatar }}"
                  class="w-10 h-10 object-cover">
           {% else %}
             <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center

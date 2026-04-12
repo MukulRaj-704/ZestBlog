@@ -45,15 +45,33 @@
         </p>
       </div>
 
-      <!-- Cover Image -->
-      <div>
-        <label class="block text-lg font-bold text-slate-900 mb-2">Cover Image</label>
-        {{ form.cover_image }}
-        {% if form.cover_image.errors %}
-          <p class="text-red-500 text-sm mt-1">{{ form.cover_image.errors.0 }}</p>
-        {% endif %}
-      </div>
+      
+<!-- Cover Image -->
+<div>
+  <label class="block text-lg font-bold text-slate-900 mb-2">
+    Cover Image
+  </label>
 
+  <!-- Hidden input -->
+  {{ form.cover_image }}
+
+  <!-- Upload Button -->
+  <button type="button" id="cover-upload-btn"
+    class="px-4 py-2 bg-blue-500 text-white rounded-lg">
+    Upload Cover Image
+  </button>
+
+  <!-- Preview -->
+  <img id="cover-preview"
+       class="mt-3 w-48 rounded-lg hidden"
+       alt="Preview">
+
+  {% if form.cover_image.errors %}
+    <p class="text-red-500 text-sm mt-1">
+      {{ form.cover_image.errors.0 }}
+    </p>
+  {% endif %}
+</div>
       <!-- Content -->
       <div>
         <label class="block text-lg font-bold text-slate-900 mb-1">Content</label>
@@ -81,4 +99,38 @@
     </form>
   </div>
 </div>
+
+<script src="https://widget.cloudinary.com/v2.0/global/all.js"></script>
+
+<script src="https://upload-widget.cloudinary.com/global/all.js"></script>
+
+<script>
+var coverWidget = cloudinary.createUploadWidget({
+    cloudName: 'dz0osju9d',
+    uploadPreset: 'ZestBlog',
+    folder: 'blog_covers',   // separate folder (optional)
+}, function(error, result) {
+
+    if (error) {
+        console.error('Upload error:', error);
+        return;
+    }
+
+    if (result.event === 'success') {
+        const url = result.info.secure_url;
+
+        // ✅ VERY IMPORTANT (Django field)
+        document.getElementById('id_cover_image').value = url;
+
+        // preview
+        const img = document.getElementById('cover-preview');
+        img.src = url;
+        img.classList.remove('hidden');
+    }
+});
+
+// button click
+document.getElementById('cover-upload-btn')
+    .addEventListener('click', () => coverWidget.open());
+</script>
 {% endblock %}

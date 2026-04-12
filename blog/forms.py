@@ -29,11 +29,8 @@ class BlogForm(forms.ModelForm):
                 'rows': 8,
                 'placeholder': 'Write your blog content here...'
             }),
-            'cover_image': forms.ClearableFileInput(attrs={
-                'class': 'w-full px-4 py-2 rounded-lg border border-gray-300 '
-                         'dark:border-gray-700 bg-white dark:bg-gray-800 '
-                         'text-gray-900 dark:text-white'
-            }),
+            'cover_image': forms.HiddenInput(),
+
             'is_published': forms.CheckboxInput(attrs={
                 'class': 'w-4 h-4 text-primary'
             }),

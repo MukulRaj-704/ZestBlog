@@ -28,7 +28,7 @@
             <div class="w-10 h-10 rounded-full overflow-hidden bg-blue-600
                         flex items-center justify-center text-white font-bold text-sm">
               {% if blog.author.profile.avatar %}
-                <img src="{{ blog.author.profile.avatar.url }}"
+                <img src="{{ blog.author.profile.avatar }}"
                      class="w-10 h-10 object-cover">
               {% else %}
                 {{ blog.author.username|first|upper }}
@@ -47,7 +47,7 @@
 
         {% if blog.cover_image %}
           <a href="{% url 'blog_detail' blog.slug %}">
-            <img src="{{ blog.cover_image.url }}"
+            <img src="{{ blog.cover_image }}"
                  class="w-full h-48 object-cover rounded-xl mb-3">
           </a>
         {% endif %}

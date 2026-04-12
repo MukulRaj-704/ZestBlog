@@ -18,7 +18,7 @@
                         bg-blue-600 flex items-center justify-center text-white
                         font-bold text-xl -mt-8 overflow-hidden shadow-lg">
               {% if user.profile.avatar %}
-                <img src="{{ user.profile.avatar.url }}"
+                <img src="{{ user.profile.avatar }}"
                      class="w-16 h-16 object-cover rounded-full">
               {% else %}
                 {{ user.username|first|upper }}
@@ -173,7 +173,7 @@
                               font-bold text-sm flex-shrink-0 ring-2
                               ring-transparent group-hover/author:ring-blue-400 transition">
                     {% if blog.author.profile.avatar %}
-                      <img src="{{ blog.author.profile.avatar.url }}"
+                      <img src="{{ blog.author.profile.avatar }}"
                            class="w-10 h-10 object-cover">
                     {% else %}
                       {{ blog.author.username|first|upper }}
@@ -228,7 +228,7 @@
               <!-- Cover image -->
               {% if blog.cover_image %}
                 <a href="{% url 'blog_detail' blog.slug %}">
-                  <img src="{{ blog.cover_image.url }}"
+                  <img src="{{ blog.cover_image }}"
                        alt="{{ blog.title }}"
                        class="w-full h-52 object-cover rounded-xl mb-3
                               group-hover:brightness-105 transition duration-200">
@@ -371,7 +371,7 @@
                                 flex items-center justify-center text-white font-bold text-sm
                                 ring-2 ring-transparent group-hover/suggest:ring-blue-400 transition">
                       {% if profile.avatar %}
-                        <img src="{{ profile.avatar.url }}" class="w-10 h-10 object-cover">
+                        <img src="{{ profile.avatar }}" class="w-10 h-10 object-cover">
                       {% else %}
                         {{ profile.user.username|first|upper }}
                       {% endif %}
